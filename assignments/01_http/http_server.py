@@ -7,7 +7,7 @@ import socket
 import sys
 
 
-HOST = '127.0.0.1'
+HOST = "127.0.0.1"
 PORT = 8080
 
 serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -19,7 +19,7 @@ serverSocket.listen(1)
 
 while True:
     # Establish the connection
-    print('Ready to serve...')
+    print("Ready to serve...")
     connectionSocket, addr = serverSocket.accept()
 
     try:
