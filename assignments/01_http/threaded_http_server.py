@@ -55,9 +55,9 @@ def serve(con_socket):
         con_socket.close()
 
 
+print("HTTP server listening on {}:{}".format(args.server_ip,
+                                              args.server_port))
+
 while True:
-    # Establish the connection
-    print("HTTP server listening on {}:{}".format(args.server_ip,
-                                                  args.server_port))
     connectionSocket, _ = serverSocket.accept()
     threading.Thread(target=serve, args=(connectionSocket,)).start()
