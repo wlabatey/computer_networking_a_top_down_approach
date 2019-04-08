@@ -1,21 +1,27 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# A very simple, threaded http web server
+# A very simple, threaded http server
 
+import argparse
 import socket
 import threading
 
+SERVER_IP = "127.0.0.1"
+SERVER_PORT = 8080
 
-HOST = '127.0.0.1'
-PORT = 8080
+parser = argparse.ArgumentParser(description="A simple threaded http server")
+parser.add_argument("server_ip", nargs="?", default=SERVER_IP,
+                    help="The address to listen on. Defaults to 127.0.0.1")
+parser.add_argument("server_port", nargs="?", default=SERVER_PORT,
+                    help="The port to bind to. Defaults to 8080")
+args = parser.parse_args()
 
 serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-# Prepare a sever socket
-serverSocket.bind((HOST, PORT))
+serverSocket.bind((SERVER_IP, SERVER_PORT))
 serverSocket.listen(4)
+
 
 def serve(con_socket):
     try:
@@ -51,6 +57,7 @@ def serve(con_socket):
 
 while True:
     # Establish the connection
-    print('Ready to serve...')
+    print("HTTP server listening on {}:{}".format(args.server_ip,
+                                                  args.server_port))
     connectionSocket, _ = serverSocket.accept()
     threading.Thread(target=serve, args=(connectionSocket,)).start()
