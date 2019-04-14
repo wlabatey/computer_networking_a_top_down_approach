@@ -23,13 +23,18 @@ serverSocket.bind((SERVER_IP, SERVER_PORT))
 serverSocket.listen(4)
 
 
-def serve(con_socket):
-    try:
-        message = con_socket.recv(2048)
+def serve(sock, addr):
 
-        filename = message.split()[1].decode()
+    print("\nReceived a request from: {}".format(addr))
+
+    try:
+        message = sock.recv(2048)
+
+        request = message.decode().split("\r\n")[0]
+
+        filename = request.split()[1]
         filename = "index.html" if filename == "/" else filename[1:]
-        print("filename: {}".format(filename))
+        print("request: {}".format(message.decode().strip("\r\n\n")))
 
         with open(filename, "r") as f:
             outputdata = f.read()
@@ -37,27 +42,27 @@ def serve(con_socket):
         response = ("HTTP/1.1 200 OK\n"
                     "Server: Python 3.7.2\n"
                     "Content-Type: text/html; charset=utf-8\r\n\n")
-        con_socket.send(response.encode())
+        sock.send(response.encode())
 
         for i in range(0, len(outputdata)):
-            con_socket.send(outputdata[i].encode())
+            sock.send(outputdata[i].encode())
 
-        con_socket.send("\r\n".encode())
-        con_socket.close()
+        sock.send("\r\n".encode())
+        sock.close()
 
     except IOError:
         # Send response message for file not found
         response = ("HTTP/1.1 404 Not Found\n"
                     "Server: Python 3.7.2\n"
                     "Content-Type: text/html; charset=utf-8\r\n\n")
-        con_socket.send(response.encode())
-        con_socket.send("\r\n".encode())
-        con_socket.close()
+        sock.send(response.encode())
+        sock.send("\r\n".encode())
+        sock.close()
 
 
 print("HTTP server listening on {}:{}".format(args.server_ip,
                                               args.server_port))
 
 while True:
-    connectionSocket, _ = serverSocket.accept()
-    threading.Thread(target=serve, args=(connectionSocket,)).start()
+    cli_sock, addr = serverSocket.accept()
+    threading.Thread(target=serve, args=(cli_sock, addr)).start()
