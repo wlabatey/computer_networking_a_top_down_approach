@@ -53,11 +53,6 @@ void A_output(message)
 
 }
 
-void B_output(message)  /* need be completed only for extra credit */
-    struct msg message;
-{
-
-}
 
 /* called from layer 3, when a packet arrives for layer 4 */
 void A_input(packet)
@@ -78,8 +73,12 @@ void A_init()
 {
 }
 
-
 /* Note that with simplex transfer from a-to-B, there is no B_output() */
+void B_output(message)  /* need be completed only for extra credit */
+    struct msg message;
+{
+
+}
 
 /* called from layer 3, when a packet arrives for layer 4 at B*/
 void B_input(packet)
@@ -92,7 +91,7 @@ void B_timerinterrupt()
 {
 }
 
-/* the following rouytine will be called once (only) before any other */
+/* the following routine will be called once (only) before any other */
 /* entity B routines are called. You can use it to do any initialization */
 void B_init()
 {
@@ -102,17 +101,17 @@ void B_init()
 /*****************************************************************
 ***************** NETWORK EMULATION CODE STARTS BELOW ***********
 The code below emulates the layer 3 and below network environment:
-  - emulates the tranmission and delivery (possibly with bit-level corruption
+  - emulates the transmission and delivery (possibly with bit-level corruption
     and packet loss) of packets across the layer 3/4 interface
   - handles the starting/stopping of a timer, and generates timer
     interrupts (resulting in calling students timer handler).
   - generates message to be sent (passed from later 5 to 4)
 
 THERE IS NOT REASON THAT ANY STUDENT SHOULD HAVE TO READ OR UNDERSTAND
-THE CODE BELOW.  YOU SHOLD NOT TOUCH, OR REFERENCE (in your code) ANY
+THE CODE BELOW.  YOU SHOULD NOT TOUCH, OR REFERENCE (in your code) ANY
 OF THE DATA STRUCTURES BELOW.  If you're interested in how I designed
 the emulator, you're welcome to look at the code - but again, you should have
-to, and you defeinitely should not have to modify
+to, and you definitely should not have to modify
 ******************************************************************/
 
 
@@ -120,7 +119,7 @@ struct event {
     float evtime;           /* event time */
     int evtype;             /* event type code */
     int eventity;           /* entity where event occurs */
-    struct pkt *pktptr;     /* ptr to packet (if any) assoc w/ this event */
+    struct pkt *pktptr;     /* pointer to packet (if any) assoc w/ this event */
     struct event *prev;
     struct event *next;
 };
@@ -138,16 +137,16 @@ struct event *evlist = NULL;   /* the event list */
 #define     B                   1
 
 
-int     TRACE = 2;              /* for my debugging */
-int     nsim = 0;               /* number of messages from 5 to 4 so far */
-int     nsimmax = 0;            /* number of msgs to generate, then stop */
-float   time = (float)0.000;
-float   lossprob;               /* probability that a packet is dropped  */
-float   corruptprob;            /* probability that one bit is packet is flipped */
-float   lambda;                 /* arrival rate of messages from layer 5 */
-int     ntolayer3;              /* number sent into layer 3 */
-int     nlost;                  /* number lost in media */
-int     ncorrupt;               /* number corrupted by media*/
+int     TRACE       = 2;         /* for my debugging */
+int     nsim        = 0;         /* number of messages from 5 to 4 so far */
+int     nsimmax     = 0;         /* number of msgs to generate, then stop */
+float   time        = 1000.000;  /* time */
+float   lossprob;                /* probability that a packet is dropped  */
+float   corruptprob;             /* probability that one bit is packet is flipped */
+float   lambda;                  /* arrival rate of messages from layer 5 */
+int     ntolayer3;               /* number sent into layer 3 */
+int     nlost;                   /* number lost in media */
+int     ncorrupt;                /* number corrupted by media*/
 
 
 int main()
@@ -259,6 +258,7 @@ int main()
     exit(0);
 }
 
+
 /* initialize the simulator */
 void init() {
     int i;
@@ -298,11 +298,13 @@ void init() {
     generate_next_arrival();     /* initialize event list */
 }
 
+
 /****************************************************************************/
 /* jimsrand(): return a float in range [0,1].  The routine below is used to */
 /* isolate all random number generation in one location.  We assume that the*/
 /* system-supplied rand() function return an int in therange [0,mmm]        */
 /****************************************************************************/
+
 float jimsrand()
 {
     double mmm = RAND_MAX;      /* largest int  - MACHINE DEPENDENT!!!!!!!!   */
@@ -311,9 +313,11 @@ float jimsrand()
     return(x);
 }
 
-/********************* EVENT HANDLINE ROUTINES *******/
+
+/********************* EVENT HANDLING ROUTINES *******/
 /*  The next set of routines handle the event list   */
 /*****************************************************/
+
 
 void generate_next_arrival()
 {
@@ -381,6 +385,7 @@ void insertevent(struct event *p)
     }
 }
 
+
 void printevlist()
 {
     struct event *q;
@@ -395,7 +400,7 @@ void printevlist()
 }
 
 
-/********************** Student-callable ROUTINES ***********************/
+/********************** STUDENT-CALLABLE ROUTINES ***********************/
 
 
 /* called by students routine to cancel a previously-started timer */
@@ -465,6 +470,8 @@ float increment;
 
 
 /************************** TOLAYER3 ***************/
+
+
 void tolayer3(AorB,packet)
 int AorB;  /* A or B is trying to stop timer */
 struct pkt packet;
