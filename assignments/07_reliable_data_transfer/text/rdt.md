@@ -6,7 +6,7 @@ Programming Assignment 5: Implementing a Reliable Transport Protocol
 In this laboratory programming assignment, you will be writing the
 sending and receiving transport-level code for implementing a simple
 reliable data transfer protocol. There are two versions of this lab, the
-Alternating-Bit-Protocol version and the  Go-Back-N version. This lab
+Alternating-Bit-Protocol version and the Go-Back-N version. This lab
 should be **fun** since your implementation will differ very little from
 what would be required in a real-world situation.
 
@@ -38,12 +38,12 @@ The unit of data passed between the upper layers and your protocols is a
 *message,* which is declared as:
 
     struct msg {
-      char data[20];
+        char data[20];
     };
 
 This declaration, and all other data structure and emulator routines, as
 well as stub routines (i.e., those you are to complete) are in the file,
-**prog2.c,** described later. Your sending entity will thus receive data
+`prog2.c,` described later. Your sending entity will thus receive data
 in 20-byte chunks from layer5; your receiving entity should deliver
 20-byte chunks of correctly received data to layer5 at the receiving
 side.
@@ -52,45 +52,45 @@ The unit of data passed between your routines and the network layer is
 the *packet,* which is declared as:
 
     struct pkt {
-       int seqnum;
-       int acknum;
-       int checksum;
-       char payload[20];
+        int seqnum;
+        int acknum;
+        int checksum;
+        char payload[20];
     };
 
 Your routines will fill in the payload field from the message data
 passed down from layer5. The other packet fields will be used by your
-protocols to insure reliable delivery, as we've seen in class.
+protocols to ensure reliable delivery, as we've seen in class.
 
 The routines you will write are detailed below. As noted above, such
 procedures in real-life would be part of the operating system, and would
 be called by other procedures in the operating system.
 
--   **A_output(message),** where `message` is a structure of type
+-   `A_output(message),` where `message` is a structure of type
     `msg,` containing data to be sent to the B-side. This routine will
     be called whenever the upper layer at the sending side (A) has a
-    message to send. It is the job of your protocol to insure that the
+    message to send. It is the job of your protocol to ensure that the
     data in such a message is delivered in-order, and correctly, to the
     receiving side upper layer.
--   **A_input(packet),** where `packet` is a structure of type
+-   `A_input(packet),` where `packet` is a structure of type
     `pkt. `This routine will be called whenever a packet sent from the
     B-side (i.e., as a result of a `tolayer3()` being done by a B-side
     procedure) arrives at the A-side. `packet` is the (possibly
     corrupted) packet sent from the B-side.
--   **A_timerinterrupt() ** This routine will be called when A's timer
+-   `A_timerinterrupt()` This routine will be called when A's timer
     expires (thus generating a timer interrupt). You'll probably want
     to use this routine to control the retransmission of packets. See
     `starttimer()` and `stoptimer()` below for how the timer is started
     and stopped.
--   **A_init()** This routine will be called once, before any of your
+-   `A_init()` This routine will be called once, before any of your
     other A-side routines are called. It can be used to do any required
     initialization.
--   **B_input(packet),**where `packet` is a structure of type
+-   `B_input(packet),`where `packet` is a structure of type
     `pkt. `This routine will be called whenever a packet sent from the
     A-side (i.e., as a result of a `tolayer3()` being done by a A-side
     procedure) arrives at the B-side. `packet` is the (possibly
     corrupted) packet sent from the A-side.
--   **B_init()** This routine will be called once, before any of your
+-   `B_init()` This routine will be called once, before any of your
     other B-side routines are called. It can be used to do any required
     initialization.
 
@@ -99,7 +99,7 @@ be called by other procedures in the operating system.
 The procedures described above are the ones that you will write. I have
 written the following routines which can be called by your routines:
 
--   **starttimer(calling_entity,increment),** where `calling_entity` is
+-   `starttimer(calling_entity,increment),` where `calling_entity` is
     either 0 (for starting the A-side timer) or 1 (for starting the B
     side timer), and `increment` is a *float* value indicating the
     amount of time that will pass before the timer interrupts. A's
@@ -108,15 +108,15 @@ written the following routines which can be called by your routines:
     appropriate increment value to use: a packet sent into the network
     takes an average of 5 time units to arrive at the other side when
     there are no other messages in the medium.
--   **stoptimer(calling_entity),** where `calling_entity` is either 0
+-   `stoptimer(calling_entity),` where `calling_entity` is either 0
     (for stopping the A-side timer) or 1 (for stopping the B side
     timer).
--   **tolayer3(calling_entity,packet),** where `calling_entity` is
+-   `tolayer3(calling_entity,packet),` where `calling_entity` is
     either 0 (for the A-side send) or 1 (for the B side send), and
     `packet` is a structure of type `pkt. `Calling this routine will
     cause the packet to be sent into the network, destined for the other
     entity.
--   **tolayer5(calling_entity,message),** where `calling_entity` is
+-   `tolayer5(calling_entity,message),` where `calling_entity` is
     either 0 (for A-side delivery to layer 5) or 1 (for B-side delivery
     to layer 5), and `message` is a structure of type `msg.` With
     unidirectional data transfer, you would only be calling this with
@@ -189,7 +189,7 @@ have writen for you, and the stubs for your procedures. You can obtain
 this program from <http://gaia.cs.umass.edu/kurose/transport/prog2.c>.
 
 **This lab can be completed on any machine supporting C. It makes no use
-of UNIX features.** (You can simply  copy the prog2.c file to whatever
+of UNIX features.** (You can simply copy the prog2.c file to whatever
 machine and OS you choose).
 
 We recommend that you should hand in a code listing, a design document,
@@ -222,7 +222,7 @@ We would **STRONGLY** recommend that you first implement the easier lab
 new considerations for your Go-Back-N code (which do not apply to the
 Alternating Bit protocol) are:
 
--   **A_output(message),** where `message` is a structure of type
+-   `A_output(message),` where `message` is a structure of type
     `msg,` containing data to be sent to the B-side.
 
     Your A_output() routine will now sometimes be called when there are
@@ -242,7 +242,7 @@ Alternating Bit protocol) are:
     to come up with a more elegant solution to the finite buffer
     problem!
 
--   **A_timerinterrupt()** This routine will be called when A's timer
+-   `A_timerinterrupt()` This routine will be called when A's timer
     expires (thus generating a timer interrupt). Remember that you've
     only got one timer, and may have many outstanding, unacknowledged
     packets in the medium, so you'll have to think a bit about how to
