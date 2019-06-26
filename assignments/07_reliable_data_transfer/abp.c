@@ -59,6 +59,8 @@ void tolayer5(char datasent[20]);
 
 int seq = 0;
 int ack = 0;
+int A_sending = 0;
+struct pkt A_sntpkt;
 
 /* Performs simple checksum on a packet's sequence number,
    acknowledgement number and payload */
@@ -72,15 +74,16 @@ int checksum(int seqnum, int acknum, char payload[20])
         sum += (int) payload[i];
     }
 
-    printf("\t\t\tCHECKSUM: %d\n", sum);
-
     return sum;
 }
 
 // called from layer 5, passed the data to be sent to other side
 void A_output(struct msg message)
 {
-    printf("\t\tA_OUTPUT\n");
+    if (A_sending == 1) {
+        printf("\t\tA_sending is 1. Dropping new packet to A_output until current packet is sent.\n");
+        return;
+    }
 
     // Create a packet, with initial seq number, acknum, checksum and payload
     struct pkt A_out;
@@ -95,23 +98,76 @@ void A_output(struct msg message)
     // Send packet to B
     tolayer3(0, A_out);
 
+    printf("\t\tA_OUTPUT ack: %d, seq: %d, checksum: %d, payload: %s\n", A_out.acknum, A_out.seqnum, A_out.checksum, A_out.payload);
+
     // Alternate seq and ack numbers between 0 and 1
     seq = 1 - seq;
     ack = 1 - ack;
+
+    starttimer(0, 15.0);
+
+    // Until we get an ACK, we will not accept any new data from layer5.
+    A_sending = 1;
+
+    // Add copy of packet to global for use in fast retransmission (if valid NACK received).
+    A_sntpkt = A_out;
 }
 
 
 // called from layer 3, when a packet arrives for layer 4
 void A_input(struct pkt packet)
 {
+    printf("\t\tA_INPUT ack: %d, seq: %d, checksum: %d, payload: %s\n", packet.acknum, packet.seqnum, packet.checksum, packet.payload);
 
+    // If NACK and checksum is valid, immediately retransmit last packet.
+    // If ACK and valid, stop the timer to prevent it expiring and set A_sending to 0 to allow new data to be sent.
+    // If packet is corrupt, ignore it.
 
+    int csum = checksum(packet.seqnum, packet.acknum, packet.payload);
+    if ( csum != packet.checksum ) {
+        printf("\t\tPACKET arriving at A is CORRUPT! Packet checksum %d differs from %d\n", packet.checksum, csum);
+        return;
+    }
+
+    // Deal with NACK by doing a fast retransmit.
+    if ( csum == packet.checksum && packet.acknum < 0 ) {
+        stoptimer(0);
+
+        printf("\t\tA_input received NACK message. Retransmitting last packet. ack: %d, seq: %d, checksum: %d, payload: %s\n", A_sntpkt.acknum, A_sntpkt.seqnum, A_sntpkt.checksum, A_sntpkt.payload);
+
+        tolayer3(0, A_sntpkt);
+
+        printf("\t\tA_OUTPUT ack: %d, seq: %d, checksum: %d, payload: %s\n", A_sntpkt.acknum, A_sntpkt.seqnum, A_sntpkt.checksum, A_sntpkt.payload);
+
+        starttimer(0, 15.0);
+
+        return;
+    }
+
+    // Deal with ACK by stopping timer and allowing more data to be sent.
+    if ( csum == packet.checksum && packet.acknum >= 0 ) {
+        printf("\t\tA_input received ACK message. Stopping timer and setting A_sending to 0. ack: %d, seq: %d, checksum: %d, payload: %s\n", packet.acknum, packet.seqnum, packet.checksum, packet.payload);
+
+        stoptimer(0);
+
+        A_sending = 0;
+
+        return;
+    }
 }
 
 // called when A's timer goes off
 void A_timerinterrupt()
 {
+    printf("\t\tA_timerinterrupt has gone off. Resending last packet. ack: %d, seq: %d, checksum: %d, payload: %s\n", A_sntpkt.acknum, A_sntpkt.seqnum, A_sntpkt.checksum, A_sntpkt.payload);
 
+    A_sending = 0;
+
+    tolayer3(0, A_sntpkt);
+
+    printf("\t\tA_OUTPUT ack: %d, seq: %d, checksum: %d, payload: %s\n", A_sntpkt.acknum, A_sntpkt.seqnum, A_sntpkt.checksum, A_sntpkt.payload);
+
+    starttimer(0, 15.0);
 }
 
 /* the following routine will be called once (only) before any other
@@ -123,19 +179,53 @@ void A_init()
 /* Note that with simplex transfer from a-to-B, there is no B_output() */
 /* need be completed only for extra credit */
 void B_output(struct msg message)  {
+    printf("\t\tB_output. message: %s", message.data);
 
 }
 
 // called from layer 3, when a packet arrives for layer 4 at B
 void B_input(struct pkt packet)
 {
-    printf("\t\tB_INPUT ack: %d, seq: %d, checksum: %d\n", packet.acknum, packet.seqnum, packet.checksum);
+    printf("\t\tB_INPUT ack: %d, seq: %d, checksum: %d, payload: %s\n", packet.acknum, packet.seqnum, packet.checksum, packet.payload);
 
-    /* TODO: Verify checksum on received packets */
-    /* TODO: Send ACK or NACK depending on checksum */
+    int csum = checksum(packet.seqnum, packet.acknum, packet.payload);
+    if ( csum != packet.checksum ) {
+        printf("\t\tPACKET arriving at B is CORRUPT! Packet checksum %d differs from %d\n", packet.checksum, csum);
+
+        struct pkt B_out;
+        char payload[20] = {'0'};
+
+        // Because we only need to NACK the last packet, and seq and ack numbers may have been corrupted,
+        // we just set both to -1 here.
+        // TODO: Seq and ack numbers should be kept locally and used for sending ACKs / NACKs.
+        B_out.seqnum = -1;
+        B_out.acknum = -1;  // Use negative numbers for NACKs
+        B_out.checksum = checksum(-1, -1, payload);
+        strncpy(B_out.payload, payload, 20);
+
+        printf("\t\tB_INPUT sending NACK. ack: %d, seq: %d, checksum: %d, payload: %s\n", B_out.acknum, B_out.seqnum, B_out.checksum, B_out.payload);
+
+        tolayer3(1, B_out);
+    } else {
+        printf("\t\tPacket arriving at B is VALID!\n");
+
+        struct pkt B_out;
+        char payload[20] = {'0'};
+
+        B_out.seqnum = (1 - packet.seqnum);
+        B_out.acknum = packet.acknum;
+        B_out.checksum = checksum((1 - packet.seqnum), packet.acknum, payload);
+        strncpy(B_out.payload, payload, 20);
+
+        printf("\t\tB_INPUT sending ACK. ack: %d, seq: %d, checksum: %d, payload: %s\n", B_out.acknum, B_out.seqnum, B_out.checksum, B_out.payload);
+        tolayer3(1, B_out);
+    }
 
 
-    tolayer5(1, packet.payload);
+    // TODO: Keep track of expected ack / seq number and discard already ACK'd packets.
+    // This avoids the case where a packet is ACK'd but the ACK is lost or corrupted, and the sender
+    // retransmits the same packet, which is then delivered again to layer5 at host B.
+    tolayer5(packet.payload);
 }
 
 // called when B's timer goes off
@@ -182,10 +272,10 @@ struct event *evlist = NULL;  // the event list
 
 int     TRACE       = 3;         // debugging level
 int     nsim        = 0;         // number of messages from 5 to 4 so far
-int     nsimmax     = 10;        // number of msgs to generate, then stop
-float   lossprob    = 0.0;       // probability that a packet is dropped
-float   corruptprob = 0.0;       // probability that one bit is packet is flipped
-float   lambda      = 1000.00;   // arrival rate of messages from layer 5
+int     nsimmax     = 20;        // number of msgs to generate, then stop
+float   lossprob    = 0.1;       // probability that a packet is dropped
+float   corruptprob = 0.3;       // probability that one bit is packet is flipped
+float   lambda      = 2000.00;   // arrival rate of messages from layer 5
 float   time;                    // event time
 int     ntolayer3;               // number sent into layer 3
 int     nlost;                   // number lost in media
