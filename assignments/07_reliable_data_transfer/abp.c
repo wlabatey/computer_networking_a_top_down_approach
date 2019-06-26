@@ -52,6 +52,10 @@ struct event {
 void init();
 void generate_next_arrival();
 void insertevent(struct event *p);
+void starttimer(int AorB, float increment);
+void stoptimer(int AorB);
+void tolayer3(int AorB, struct pkt);
+void tolayer5(char datasent[20]);
 
 int seq = 0;
 int ack = 0;
@@ -229,7 +233,7 @@ int main()
            printf("\nEVENT time: %f,",eventptr->evtime);
            printf("  type: %d",eventptr->evtype);
             if (eventptr->evtype==0) {
-                printf(", timerinterrupt  ");
+                printf(", timerinterrupt\n");
             }
             else if (eventptr->evtype==1) {
                 printf(", fromlayer5\n");
@@ -393,8 +397,8 @@ void generate_next_arrival()
                                    having mean of lambda */
 
     evptr = (struct event *)malloc(sizeof(struct event));
-    evptr->evtime =  (float)(time + x);
-    evptr->evtype =  FROM_LAYER5;
+    evptr->evtime = time + x;
+    evptr->evtype = FROM_LAYER5;
 
     if (BIDIRECTIONAL && (jimsrand()>0.5)) {
         evptr->eventity = B;
@@ -488,7 +492,7 @@ void stoptimer(int AorB)  // A or B is trying to stop timer
             }
             else {                                  // middle of list
                 q->next->prev = q->prev;
-                q->prev->next =  q->next;
+                q->prev->next = q->next;
             }
 
         free(q);
@@ -498,8 +502,7 @@ void stoptimer(int AorB)  // A or B is trying to stop timer
     printf("Warning: unable to cancel your timer. It wasn't running.\n");
 }
 
-
-void starttimer(int AorB, float increment)  // A or B is trying to stop timer
+void starttimer(int AorB, float increment)  // A or B is trying to start timer
 {
     struct event *q;
     struct event *evptr;
@@ -509,8 +512,8 @@ void starttimer(int AorB, float increment)  // A or B is trying to stop timer
     }
 
     // be nice: check to see if timer is already started, if so, then warn
-    for (q=evlist; q!=NULL ; q = q->next) {
-        if ( (q->evtype==TIMER_INTERRUPT  && q->eventity==AorB) ) {
+    for (q=evlist; q!=NULL; q = q->next) {
+        if ( (q->evtype==TIMER_INTERRUPT && q->eventity==AorB) ) {
             printf("Warning: attempt to start a timer that is already started\n");
             return;
         }
@@ -518,12 +521,11 @@ void starttimer(int AorB, float increment)  // A or B is trying to stop timer
 
     // create future event for when timer goes off
     evptr = (struct event *)malloc(sizeof(struct event));
-    evptr->evtime =  (float)(time + increment);
-    evptr->evtype =  TIMER_INTERRUPT;
+    evptr->evtime = time + increment;
+    evptr->evtype = TIMER_INTERRUPT;
     evptr->eventity = AorB;
     insertevent(evptr);
 }
-
 
 /************************** TOLAYER3 ***************/
 
@@ -614,7 +616,7 @@ void tolayer3(int AorB, struct pkt packet)  // A or B is trying to stop timer
 }
 
 
-void tolayer5(int AorB, char datasent[20])
+void tolayer5(char datasent[20])
 {
     int i;
 
