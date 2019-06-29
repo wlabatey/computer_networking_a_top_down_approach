@@ -57,10 +57,13 @@ void stoptimer(int AorB);
 void tolayer3(int AorB, struct pkt);
 void tolayer5(char datasent[20]);
 
-int seq = 0;
-int ack = 0;
+int A_seq = 0;
+int A_ack = 0;
+int B_seq = 0;
+int B_ack = 0;
 int A_sending = 0;
 struct pkt A_sntpkt;
+struct pkt B_lastpkt;
 
 /* Performs simple checksum on a packet's sequence number,
    acknowledgement number and payload */
@@ -88,23 +91,22 @@ void A_output(struct msg message)
     // Create a packet, with initial seq number, acknum, checksum and payload
     struct pkt A_out;
 
-    A_out.seqnum = seq;
-    A_out.acknum = ack;
-    A_out.checksum = checksum(seq, ack, message.data);
+    A_out.seqnum = A_seq;
+    A_out.acknum = A_ack;
+    A_out.checksum = checksum(A_seq, A_ack, message.data);
 
     size_t dest_size = sizeof (message.data);
     strncpy(A_out.payload, message.data, dest_size);
 
+    printf("\t\tA_OUTPUT seq: %d, ack: %d, checksum: %d, payload: %s\n", A_out.seqnum, A_out.acknum, A_out.checksum, A_out.payload);
+
     // Send packet to B
     tolayer3(0, A_out);
 
-    printf("\t\tA_OUTPUT ack: %d, seq: %d, checksum: %d, payload: %s\n", A_out.acknum, A_out.seqnum, A_out.checksum, A_out.payload);
-
     // Alternate seq and ack numbers between 0 and 1
-    seq = 1 - seq;
-    ack = 1 - ack;
+    A_seq = 1 - A_seq;
 
-    starttimer(0, 15.0);
+    starttimer(0, 20.0);
 
     // Until we get an ACK, we will not accept any new data from layer5.
     A_sending = 1;
@@ -117,7 +119,7 @@ void A_output(struct msg message)
 // called from layer 3, when a packet arrives for layer 4
 void A_input(struct pkt packet)
 {
-    printf("\t\tA_INPUT ack: %d, seq: %d, checksum: %d, payload: %s\n", packet.acknum, packet.seqnum, packet.checksum, packet.payload);
+    printf("\t\tA_INPUT seq: %d, ack: %d, checksum: %d, payload: %s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
 
     // If NACK and checksum is valid, immediately retransmit last packet.
     // If ACK and valid, stop the timer to prevent it expiring and set A_sending to 0 to allow new data to be sent.
@@ -130,25 +132,25 @@ void A_input(struct pkt packet)
     }
 
     // Deal with NACK by doing a fast retransmit.
-    if ( csum == packet.checksum && packet.acknum < 0 ) {
+    if ( csum == packet.checksum && packet.acknum == (A_sntpkt.seqnum - 2)) {
         stoptimer(0);
 
-        printf("\t\tA_input received NACK message. Retransmitting last packet. ack: %d, seq: %d, checksum: %d, payload: %s\n", A_sntpkt.acknum, A_sntpkt.seqnum, A_sntpkt.checksum, A_sntpkt.payload);
+        printf("\t\tA_input received NACK message. Retransmitting last packet. seq: %d, ack: %d, checksum: %d, payload: %s\n", A_sntpkt.seqnum, A_sntpkt.acknum, A_sntpkt.checksum, A_sntpkt.payload);
 
         tolayer3(0, A_sntpkt);
 
-        printf("\t\tA_OUTPUT ack: %d, seq: %d, checksum: %d, payload: %s\n", A_sntpkt.acknum, A_sntpkt.seqnum, A_sntpkt.checksum, A_sntpkt.payload);
+        printf("\t\tA_OUTPUT seq: %d, ack: %d, checksum: %d, payload: %s\n", A_sntpkt.seqnum, A_sntpkt.acknum, A_sntpkt.checksum, A_sntpkt.payload);
 
-        starttimer(0, 15.0);
+        starttimer(0, 20.0);
 
         return;
     }
 
     // Deal with ACK by stopping timer and allowing more data to be sent.
-    if ( csum == packet.checksum && packet.acknum >= 0 ) {
-        printf("\t\tA_input received ACK message. Stopping timer and setting A_sending to 0. ack: %d, seq: %d, checksum: %d, payload: %s\n", packet.acknum, packet.seqnum, packet.checksum, packet.payload);
-
+    if ( csum == packet.checksum && packet.acknum == A_sntpkt.seqnum ) {
         stoptimer(0);
+
+        printf("\t\tA_input received ACK message. Stopping timer and setting A_sending to 0. seq: %d, ack: %d, checksum: %d, payload: %s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
 
         A_sending = 0;
 
@@ -159,15 +161,15 @@ void A_input(struct pkt packet)
 // called when A's timer goes off
 void A_timerinterrupt()
 {
-    printf("\t\tA_timerinterrupt has gone off. Resending last packet. ack: %d, seq: %d, checksum: %d, payload: %s\n", A_sntpkt.acknum, A_sntpkt.seqnum, A_sntpkt.checksum, A_sntpkt.payload);
+    printf("\t\tA_timerinterrupt has gone off. Resending last packet. seq: %d, ack: %d, checksum: %d, payload: %s\n", A_sntpkt.seqnum, A_sntpkt.acknum, A_sntpkt.checksum, A_sntpkt.payload);
 
     A_sending = 0;
 
     tolayer3(0, A_sntpkt);
 
-    printf("\t\tA_OUTPUT ack: %d, seq: %d, checksum: %d, payload: %s\n", A_sntpkt.acknum, A_sntpkt.seqnum, A_sntpkt.checksum, A_sntpkt.payload);
+    printf("\t\tA_OUTPUT seq: %d, ack: %d, checksum: %d, payload: %s\n", A_sntpkt.seqnum, A_sntpkt.acknum, A_sntpkt.checksum, A_sntpkt.payload);
 
-    starttimer(0, 15.0);
+    starttimer(0, 20.0);
 }
 
 /* the following routine will be called once (only) before any other
@@ -186,46 +188,54 @@ void B_output(struct msg message)  {
 // called from layer 3, when a packet arrives for layer 4 at B
 void B_input(struct pkt packet)
 {
-    printf("\t\tB_INPUT ack: %d, seq: %d, checksum: %d, payload: %s\n", packet.acknum, packet.seqnum, packet.checksum, packet.payload);
+    printf("\t\tB_INPUT seq: %d, ack: %d, checksum: %d, payload: %s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
 
     int csum = checksum(packet.seqnum, packet.acknum, packet.payload);
+
+    // Corrupted packet
     if ( csum != packet.checksum ) {
         printf("\t\tPACKET arriving at B is CORRUPT! Packet checksum %d differs from %d\n", packet.checksum, csum);
 
         struct pkt B_out;
         char payload[20] = {'0'};
 
-        // Because we only need to NACK the last packet, and seq and ack numbers may have been corrupted,
-        // we just set both to -1 here.
-        // TODO: Seq and ack numbers should be kept locally and used for sending ACKs / NACKs.
-        B_out.seqnum = -1;
-        B_out.acknum = -1;  // Use negative numbers for NACKs
-        B_out.checksum = checksum(-1, -1, payload);
+        B_out.seqnum = B_seq;
+        B_out.acknum = (B_ack - 2);  // Use negative numbers for NACKs
+        B_out.checksum = checksum(B_seq, (B_ack - 2), payload);
         strncpy(B_out.payload, payload, 20);
 
-        printf("\t\tB_INPUT sending NACK. ack: %d, seq: %d, checksum: %d, payload: %s\n", B_out.acknum, B_out.seqnum, B_out.checksum, B_out.payload);
+        printf("\t\tB_INPUT sending NACK. seq: %d, ack: %d, checksum: %d, payload: %s\n", B_out.seqnum, B_out.acknum, B_out.checksum, B_out.payload);
 
         tolayer3(1, B_out);
     } else {
+        // Valid packet
         printf("\t\tPacket arriving at B is VALID!\n");
 
         struct pkt B_out;
         char payload[20] = {'0'};
 
-        B_out.seqnum = (1 - packet.seqnum);
-        B_out.acknum = packet.acknum;
-        B_out.checksum = checksum((1 - packet.seqnum), packet.acknum, payload);
+        B_out.seqnum = B_seq;
+        B_out.acknum = packet.seqnum;
+        B_out.checksum = checksum(B_seq, packet.seqnum, payload);
         strncpy(B_out.payload, payload, 20);
 
-        printf("\t\tB_INPUT sending ACK. ack: %d, seq: %d, checksum: %d, payload: %s\n", B_out.acknum, B_out.seqnum, B_out.checksum, B_out.payload);
+        printf("\t\tB_INPUT sending ACK. seq: %d, ack: %d, checksum: %d, payload: %s\n", B_out.seqnum, B_out.acknum, B_out.checksum, B_out.payload);
+
         tolayer3(1, B_out);
+
+        // Discard previously ACK'd packets after sending ACK.
+        if ( B_lastpkt.seqnum != -999 && packet.seqnum == B_lastpkt.seqnum ) {
+            printf("\t\tB_INPUT discarding previously ACK'd packet. seq: %d, ack: %d, checksum: %d, payload: %s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
+        } else {
+            // Alternate seq and ack numbers between 0 and 1
+            B_seq = 1 - B_seq;
+            B_ack = 1 - B_ack;
+
+            tolayer5(packet.payload);
+
+            B_lastpkt = packet;
+        }
     }
-
-
-    // TODO: Keep track of expected ack / seq number and discard already ACK'd packets.
-    // This avoids the case where a packet is ACK'd but the ACK is lost or corrupted, and the sender
-    // retransmits the same packet, which is then delivered again to layer5 at host B.
-    tolayer5(packet.payload);
 }
 
 // called when B's timer goes off
@@ -237,6 +247,8 @@ void B_timerinterrupt()
    entity B routines are called. You can use it to do any initialization */
 void B_init()
 {
+    // Initialize B_lastpkt.seqnum to -999
+    B_lastpkt.seqnum = -999;
 }
 
 
@@ -273,8 +285,8 @@ struct event *evlist = NULL;  // the event list
 int     TRACE       = 3;         // debugging level
 int     nsim        = 0;         // number of messages from 5 to 4 so far
 int     nsimmax     = 20;        // number of msgs to generate, then stop
-float   lossprob    = 0.1;       // probability that a packet is dropped
-float   corruptprob = 0.3;       // probability that one bit is packet is flipped
+float   lossprob    = 0.2;       // probability that a packet is dropped
+float   corruptprob = 0.1;       // probability that one bit is packet is flipped
 float   lambda      = 2000.00;   // arrival rate of messages from layer 5
 float   time;                    // event time
 int     ntolayer3;               // number sent into layer 3
@@ -284,18 +296,18 @@ int     ncorrupt;                // number corrupted by media
 
 int main()
 {
-   struct event *eventptr;
-   struct msg  msg2give;
-   struct pkt  pkt2give;
+    struct event *eventptr;
+    struct msg  msg2give;
+    struct pkt  pkt2give;
 
-   int i,j;
-   int terminate = 0;
+    int i,j;
+    int terminate = 0;
 
-   init();
-   A_init();
-   B_init();
+    init();
+    A_init();
+    B_init();
 
-   while (1) {
+    while (1) {
         // get next event to simulate
         eventptr = evlist;
 
@@ -483,14 +495,14 @@ void generate_next_arrival()
         printf("\tGENERATE NEXT ARRIVAL: creating new arrival\n");
     }
 
-    x = lambda*jimsrand()*2;    /* x is uniform on [0,2*lambda]
+    x = lambda * jimsrand()*2;    /* x is uniform on [0,2*lambda]
                                    having mean of lambda */
 
     evptr = (struct event *)malloc(sizeof(struct event));
     evptr->evtime = time + x;
     evptr->evtype = FROM_LAYER5;
 
-    if (BIDIRECTIONAL && (jimsrand()>0.5)) {
+    if (BIDIRECTIONAL && (jimsrand() > 0.5)) {
         evptr->eventity = B;
     }
     else {
