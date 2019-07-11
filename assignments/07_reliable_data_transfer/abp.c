@@ -48,6 +48,8 @@ struct event {
 
 //********* STUDENTS WRITE THE NEXT SEVEN ROUTINES *********
 
+// TODO: Refactor pkt creation into function.
+// TODO: Add bidirectional transfer support.
 
 void init();
 void generate_next_arrival();
@@ -57,13 +59,18 @@ void stoptimer(int AorB);
 void tolayer3(int AorB, struct pkt);
 void tolayer5(char datasent[20]);
 
-int A_seq = 0;
-int A_ack = 0;
-int B_seq = 0;
-int B_ack = 0;
-int A_sending = 0;
-struct pkt A_sntpkt;
-struct pkt B_lastpkt;
+enum sending_state {
+    INITIAL,
+    READY,
+    WAITING_FOR_ACK
+};
+
+struct sender {
+    int seqnum;
+    int acknum;
+    enum sending_state sending_state;
+    struct pkt last_packet;
+} A_sender, B_sender;
 
 /* Performs simple checksum on a packet's sequence number,
    acknowledgement number and payload */
@@ -83,17 +90,17 @@ int checksum(int seqnum, int acknum, char payload[20])
 // called from layer 5, passed the data to be sent to other side
 void A_output(struct msg message)
 {
-    if (A_sending == 1) {
-        printf("\t\tA_sending is 1. Dropping new packet to A_output until current packet is sent.\n");
+    if (A_sender.sending_state == WAITING_FOR_ACK) {
+        printf("\t\tA_sender.sending_state is WAITING_FOR_ACK. Dropping new packet to A_output until current packet is sent.\n");
         return;
     }
 
     // Create a packet, with initial seq number, acknum, checksum and payload
     struct pkt A_out;
 
-    A_out.seqnum = A_seq;
-    A_out.acknum = A_ack;
-    A_out.checksum = checksum(A_seq, A_ack, message.data);
+    A_out.seqnum = A_sender.seqnum;
+    A_out.acknum = A_sender.acknum;
+    A_out.checksum = checksum(A_sender.seqnum, A_sender.acknum, message.data);
 
     size_t dest_size = sizeof (message.data);
     strncpy(A_out.payload, message.data, dest_size);
@@ -104,15 +111,15 @@ void A_output(struct msg message)
     tolayer3(0, A_out);
 
     // Alternate seq and ack numbers between 0 and 1
-    A_seq = 1 - A_seq;
+    A_sender.seqnum = 1 - A_sender.seqnum;
 
     starttimer(0, 20.0);
 
     // Until we get an ACK, we will not accept any new data from layer5.
-    A_sending = 1;
+    A_sender.sending_state = WAITING_FOR_ACK;
 
     // Add copy of packet to global for use in fast retransmission (if valid NACK received).
-    A_sntpkt = A_out;
+    A_sender.last_packet = A_out;
 }
 
 
@@ -122,7 +129,7 @@ void A_input(struct pkt packet)
     printf("\t\tA_INPUT seq: %d, ack: %d, checksum: %d, payload: %s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
 
     // If NACK and checksum is valid, immediately retransmit last packet.
-    // If ACK and valid, stop the timer to prevent it expiring and set A_sending to 0 to allow new data to be sent.
+    // If ACK and valid, stop the timer to prevent it expiring and set A_sender.sending_state to 0 to allow new data to be sent.
     // If packet is corrupt, ignore it.
 
     int csum = checksum(packet.seqnum, packet.acknum, packet.payload);
@@ -132,14 +139,14 @@ void A_input(struct pkt packet)
     }
 
     // Deal with NACK by doing a fast retransmit.
-    if ( csum == packet.checksum && packet.acknum == (A_sntpkt.seqnum - 2)) {
+    if ( csum == packet.checksum && packet.acknum == (A_sender.last_packet.seqnum - 2)) {
         stoptimer(0);
 
-        printf("\t\tA_input received NACK message. Retransmitting last packet. seq: %d, ack: %d, checksum: %d, payload: %s\n", A_sntpkt.seqnum, A_sntpkt.acknum, A_sntpkt.checksum, A_sntpkt.payload);
+        printf("\t\tA_input received NACK message. Retransmitting last packet. seq: %d, ack: %d, checksum: %d, payload: %s\n", A_sender.last_packet.seqnum, A_sender.last_packet.acknum, A_sender.last_packet.checksum, A_sender.last_packet.payload);
 
-        tolayer3(0, A_sntpkt);
+        tolayer3(0, A_sender.last_packet);
 
-        printf("\t\tA_OUTPUT seq: %d, ack: %d, checksum: %d, payload: %s\n", A_sntpkt.seqnum, A_sntpkt.acknum, A_sntpkt.checksum, A_sntpkt.payload);
+        printf("\t\tA_OUTPUT seq: %d, ack: %d, checksum: %d, payload: %s\n", A_sender.last_packet.seqnum, A_sender.last_packet.acknum, A_sender.last_packet.checksum, A_sender.last_packet.payload);
 
         starttimer(0, 20.0);
 
@@ -147,12 +154,12 @@ void A_input(struct pkt packet)
     }
 
     // Deal with ACK by stopping timer and allowing more data to be sent.
-    if ( csum == packet.checksum && packet.acknum == A_sntpkt.seqnum ) {
+    if ( csum == packet.checksum && packet.acknum == A_sender.last_packet.seqnum ) {
         stoptimer(0);
 
-        printf("\t\tA_input received ACK message. Stopping timer and setting A_sending to 0. seq: %d, ack: %d, checksum: %d, payload: %s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
+        printf("\t\tA_input received ACK message. Stopping timer and setting A_sender.sending_state to 0. seq: %d, ack: %d, checksum: %d, payload: %s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
 
-        A_sending = 0;
+        A_sender.sending_state = READY;
 
         return;
     }
@@ -161,13 +168,13 @@ void A_input(struct pkt packet)
 // called when A's timer goes off
 void A_timerinterrupt()
 {
-    printf("\t\tA_timerinterrupt has gone off. Resending last packet. seq: %d, ack: %d, checksum: %d, payload: %s\n", A_sntpkt.seqnum, A_sntpkt.acknum, A_sntpkt.checksum, A_sntpkt.payload);
+    printf("\t\tA_timerinterrupt has gone off. Resending last packet. seq: %d, ack: %d, checksum: %d, payload: %s\n", A_sender.last_packet.seqnum, A_sender.last_packet.acknum, A_sender.last_packet.checksum, A_sender.last_packet.payload);
 
-    A_sending = 0;
+    A_sender.sending_state = READY;
 
-    tolayer3(0, A_sntpkt);
+    tolayer3(0, A_sender.last_packet);
 
-    printf("\t\tA_OUTPUT seq: %d, ack: %d, checksum: %d, payload: %s\n", A_sntpkt.seqnum, A_sntpkt.acknum, A_sntpkt.checksum, A_sntpkt.payload);
+    printf("\t\tA_OUTPUT seq: %d, ack: %d, checksum: %d, payload: %s\n", A_sender.last_packet.seqnum, A_sender.last_packet.acknum, A_sender.last_packet.checksum, A_sender.last_packet.payload);
 
     starttimer(0, 20.0);
 }
@@ -176,6 +183,9 @@ void A_timerinterrupt()
    entity A routines are called. You can use it to do any initialization */
 void A_init()
 {
+    A_sender.sending_state = INITIAL;
+    A_sender.seqnum = 0;
+    A_sender.acknum = 0;
 }
 
 /* Note that with simplex transfer from a-to-B, there is no B_output() */
@@ -199,9 +209,9 @@ void B_input(struct pkt packet)
         struct pkt B_out;
         char payload[20] = {'0'};
 
-        B_out.seqnum = B_seq;
-        B_out.acknum = (B_ack - 2);  // Use negative numbers for NACKs
-        B_out.checksum = checksum(B_seq, (B_ack - 2), payload);
+        B_out.seqnum = B_sender.seqnum;
+        B_out.acknum = (B_sender.acknum - 2);  // Use negative numbers for NACKs
+        B_out.checksum = checksum(B_sender.seqnum, (B_sender.acknum - 2), payload);
         strncpy(B_out.payload, payload, 20);
 
         printf("\t\tB_INPUT sending NACK. seq: %d, ack: %d, checksum: %d, payload: %s\n", B_out.seqnum, B_out.acknum, B_out.checksum, B_out.payload);
@@ -214,9 +224,9 @@ void B_input(struct pkt packet)
         struct pkt B_out;
         char payload[20] = {'0'};
 
-        B_out.seqnum = B_seq;
+        B_out.seqnum = B_sender.seqnum;
         B_out.acknum = packet.seqnum;
-        B_out.checksum = checksum(B_seq, packet.seqnum, payload);
+        B_out.checksum = checksum(B_sender.seqnum, packet.seqnum, payload);
         strncpy(B_out.payload, payload, 20);
 
         printf("\t\tB_INPUT sending ACK. seq: %d, ack: %d, checksum: %d, payload: %s\n", B_out.seqnum, B_out.acknum, B_out.checksum, B_out.payload);
@@ -224,16 +234,16 @@ void B_input(struct pkt packet)
         tolayer3(1, B_out);
 
         // Discard previously ACK'd packets after sending ACK.
-        if ( B_lastpkt.seqnum != -999 && packet.seqnum == B_lastpkt.seqnum ) {
+        if ( B_sender.last_packet.seqnum != -999 && packet.seqnum == B_sender.last_packet.seqnum ) {
             printf("\t\tB_INPUT discarding previously ACK'd packet. seq: %d, ack: %d, checksum: %d, payload: %s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
         } else {
             // Alternate seq and ack numbers between 0 and 1
-            B_seq = 1 - B_seq;
-            B_ack = 1 - B_ack;
+            B_sender.seqnum = 1 - B_sender.seqnum;
+            B_sender.acknum = 1 - B_sender.acknum;
 
             tolayer5(packet.payload);
 
-            B_lastpkt = packet;
+            B_sender.last_packet = packet;
         }
     }
 }
@@ -247,8 +257,10 @@ void B_timerinterrupt()
    entity B routines are called. You can use it to do any initialization */
 void B_init()
 {
-    // Initialize B_lastpkt.seqnum to -999
-    B_lastpkt.seqnum = -999;
+    B_sender.sending_state = INITIAL;
+    B_sender.last_packet.seqnum = -999;
+    B_sender.seqnum = 0;
+    B_sender.acknum = 0;
 }
 
 
