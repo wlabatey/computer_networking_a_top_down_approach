@@ -48,9 +48,6 @@ struct event {
 
 //********* STUDENTS WRITE THE NEXT SEVEN ROUTINES *********
 
-// TODO: Refactor pkt creation into function.
-// TODO: Add bidirectional transfer support.
-
 void init();
 void generate_next_arrival();
 void insertevent(struct event *p);
@@ -60,7 +57,6 @@ void tolayer3(int AorB, struct pkt);
 void tolayer5(char datasent[20]);
 
 enum sending_state {
-    INITIAL,
     READY,
     WAITING_FOR_ACK
 };
@@ -183,7 +179,7 @@ void A_timerinterrupt()
    entity A routines are called. You can use it to do any initialization */
 void A_init()
 {
-    A_sender.sending_state = INITIAL;
+    A_sender.sending_state = READY;
     A_sender.seqnum = 0;
     A_sender.acknum = 0;
 }
@@ -257,7 +253,7 @@ void B_timerinterrupt()
    entity B routines are called. You can use it to do any initialization */
 void B_init()
 {
-    B_sender.sending_state = INITIAL;
+    B_sender.sending_state = READY;
     B_sender.last_packet.seqnum = -999;
     B_sender.seqnum = 0;
     B_sender.acknum = 0;
