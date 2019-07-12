@@ -56,15 +56,9 @@ void stoptimer(int AorB);
 void tolayer3(int AorB, struct pkt);
 void tolayer5(char datasent[20]);
 
-enum sending_state {
-    READY,
-    WAITING_FOR_ACK
-};
-
 struct sender {
     int seqnum;
     int acknum;
-    enum sending_state sending_state;
     struct pkt last_packet;
 } A_sender, B_sender;
 
@@ -86,11 +80,6 @@ int checksum(int seqnum, int acknum, char payload[20])
 // called from layer 5, passed the data to be sent to other side
 void A_output(struct msg message)
 {
-    if (A_sender.sending_state == WAITING_FOR_ACK) {
-        printf("\t\tA_sender.sending_state is WAITING_FOR_ACK. Dropping new packet to A_output until current packet is sent.\n");
-        return;
-    }
-
     // Create a packet, with initial seq number, acknum, checksum and payload
     struct pkt A_out;
 
@@ -111,9 +100,6 @@ void A_output(struct msg message)
 
     starttimer(0, 20.0);
 
-    // Until we get an ACK, we will not accept any new data from layer5.
-    A_sender.sending_state = WAITING_FOR_ACK;
-
     // Add copy of packet to global for use in fast retransmission (if valid NACK received).
     A_sender.last_packet = A_out;
 }
@@ -125,7 +111,7 @@ void A_input(struct pkt packet)
     printf("\t\tA_INPUT seq: %d, ack: %d, checksum: %d, payload: %s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
 
     // If NACK and checksum is valid, immediately retransmit last packet.
-    // If ACK and valid, stop the timer to prevent it expiring and set A_sender.sending_state to READY to allow new data to be sent.
+    // If ACK and valid, stop the timer to prevent it expiring.
     // If packet is corrupt, ignore it.
 
     int csum = checksum(packet.seqnum, packet.acknum, packet.payload);
@@ -153,9 +139,7 @@ void A_input(struct pkt packet)
     if ( csum == packet.checksum && packet.acknum == A_sender.last_packet.seqnum ) {
         stoptimer(0);
 
-        printf("\t\tA_input received ACK message. Stopping timer and setting A_sender.sending_state to READY. seq: %d, ack: %d, checksum: %d, payload: %s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
-
-        A_sender.sending_state = READY;
+        printf("\t\tA_input received ACK message. Stopping timer. seq: %d, ack: %d, checksum: %d, payload: %s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
 
         return;
     }
@@ -165,8 +149,6 @@ void A_input(struct pkt packet)
 void A_timerinterrupt()
 {
     printf("\t\tA_timerinterrupt has gone off. Resending last packet. seq: %d, ack: %d, checksum: %d, payload: %s\n", A_sender.last_packet.seqnum, A_sender.last_packet.acknum, A_sender.last_packet.checksum, A_sender.last_packet.payload);
-
-    A_sender.sending_state = READY;
 
     tolayer3(0, A_sender.last_packet);
 
@@ -179,7 +161,6 @@ void A_timerinterrupt()
    entity A routines are called. You can use it to do any initialization */
 void A_init()
 {
-    A_sender.sending_state = READY;
     A_sender.seqnum = 0;
     A_sender.acknum = 0;
 }
@@ -257,7 +238,6 @@ void B_timerinterrupt()
    entity B routines are called. You can use it to do any initialization */
 void B_init()
 {
-    B_sender.sending_state = READY;
     B_sender.last_packet.seqnum = -999;
     B_sender.seqnum = 0;
     B_sender.acknum = 0;
