@@ -31,7 +31,7 @@ are to be implemented in the form of the procedures described below.
 These procedures will be called by (and will call) procedures that I
 have written which emulate a network environment. The overall structure
 of the environment is shown in [Figure
-Lab.3-1](https://media.pearsoncmg.com/aw/aw_kurose_network_3/labs/lab5/figpa21.gif)
+Lab.3-1](https://raw.githubusercontent.com/wlabatey/computer_networking_a_top_down_approach/master/assignments/07_reliable_data_transfer/text/figpa21.gif)
 (structure of the emulated environment):
 
 The unit of data passed between the upper layers and your protocols is a
