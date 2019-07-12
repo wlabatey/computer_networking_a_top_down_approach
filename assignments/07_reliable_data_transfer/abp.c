@@ -125,7 +125,7 @@ void A_input(struct pkt packet)
     printf("\t\tA_INPUT seq: %d, ack: %d, checksum: %d, payload: %s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
 
     // If NACK and checksum is valid, immediately retransmit last packet.
-    // If ACK and valid, stop the timer to prevent it expiring and set A_sender.sending_state to 0 to allow new data to be sent.
+    // If ACK and valid, stop the timer to prevent it expiring and set A_sender.sending_state to READY to allow new data to be sent.
     // If packet is corrupt, ignore it.
 
     int csum = checksum(packet.seqnum, packet.acknum, packet.payload);
@@ -153,7 +153,7 @@ void A_input(struct pkt packet)
     if ( csum == packet.checksum && packet.acknum == A_sender.last_packet.seqnum ) {
         stoptimer(0);
 
-        printf("\t\tA_input received ACK message. Stopping timer and setting A_sender.sending_state to 0. seq: %d, ack: %d, checksum: %d, payload: %s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
+        printf("\t\tA_input received ACK message. Stopping timer and setting A_sender.sending_state to READY. seq: %d, ack: %d, checksum: %d, payload: %s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
 
         A_sender.sending_state = READY;
 
