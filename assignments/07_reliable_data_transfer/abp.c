@@ -436,20 +436,10 @@ void init() {
     float jimsrand();
 
     printf("-----  Stop and Wait Network Simulator Version 1.1 -------- \n\n");
-    /*printf("Enter the number of messages to simulate: ");*/
     printf("Messages to simulate:                        %d\n", nsimmax);
-    /*scanf("%d",&nsimmax);*/
-    /*printf("Enter packet loss probability [0.0 for no loss]: ");*/
     printf("Packet loss probability:                     %f\n", lossprob);
-    /*scanf("%f",&lossprob);*/
-    /*printf("Enter packet corruption probability [0.0 for no corruption]: ");*/
     printf("Packet corruption probability:               %f\n", corruptprob);
-    /*scanf("%f",&corruptprob);*/
-    /*printf("Enter average time between messages from sender's layer5 [ > 0.0]: ");*/
     printf("Time between messages from sender's layer5:  %f\n", lambda);
-    /*scanf("%f",&lambda);*/
-    /*printf("Enter TRACE: ");*/
-    /*scanf("%d",&TRACE);*/
     printf("Debug level:                                 %d\n\n", TRACE);
     printf("-----------------------------------------------------------\n\n");
     printf("Press enter key to continue. ");
