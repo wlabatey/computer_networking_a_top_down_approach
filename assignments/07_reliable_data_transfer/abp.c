@@ -213,35 +213,39 @@ void B_input(struct pkt packet)
         printf("\t\tB_INPUT sending NACK. seq: %d, ack: %d, checksum: %d, payload: %s\n", B_out.seqnum, B_out.acknum, B_out.checksum, B_out.payload);
 
         tolayer3(1, B_out);
-    } else {
-        // Valid packet
-        printf("\t\tPacket arriving at B is VALID!\n");
 
-        struct pkt B_out;
-        char payload[20] = {'0'};
-
-        B_out.seqnum = B_sender.seqnum;
-        B_out.acknum = packet.seqnum;
-        B_out.checksum = checksum(B_sender.seqnum, packet.seqnum, payload);
-        strncpy(B_out.payload, payload, 20);
-
-        printf("\t\tB_INPUT sending ACK. seq: %d, ack: %d, checksum: %d, payload: %s\n", B_out.seqnum, B_out.acknum, B_out.checksum, B_out.payload);
-
-        tolayer3(1, B_out);
-
-        // Discard previously ACK'd packets after sending ACK.
-        if ( B_sender.last_packet.seqnum != -999 && packet.seqnum == B_sender.last_packet.seqnum ) {
-            printf("\t\tB_INPUT discarding previously ACK'd packet. seq: %d, ack: %d, checksum: %d, payload: %s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
-        } else {
-            // Alternate seq and ack numbers between 0 and 1
-            B_sender.seqnum = 1 - B_sender.seqnum;
-            B_sender.acknum = 1 - B_sender.acknum;
-
-            tolayer5(packet.payload);
-
-            B_sender.last_packet = packet;
-        }
+        return;
     }
+
+    // Valid packet
+    printf("\t\tPacket arriving at B is VALID!\n");
+
+    struct pkt B_out;
+    char payload[20] = {'0'};
+
+    B_out.seqnum = B_sender.seqnum;
+    B_out.acknum = packet.seqnum;
+    B_out.checksum = checksum(B_sender.seqnum, packet.seqnum, payload);
+    strncpy(B_out.payload, payload, 20);
+
+    printf("\t\tB_INPUT sending ACK. seq: %d, ack: %d, checksum: %d, payload: %s\n", B_out.seqnum, B_out.acknum, B_out.checksum, B_out.payload);
+
+    tolayer3(1, B_out);
+
+    // Discard previously ACK'd packets after sending ACK.
+    if ( B_sender.last_packet.seqnum != -999 && packet.seqnum == B_sender.last_packet.seqnum ) {
+        printf("\t\tB_INPUT discarding previously ACK'd packet. seq: %d, ack: %d, checksum: %d, payload: %s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
+
+        return;
+    }
+
+    // Alternate seq and ack numbers between 0 and 1
+    B_sender.seqnum = 1 - B_sender.seqnum;
+    B_sender.acknum = 1 - B_sender.acknum;
+
+    tolayer5(packet.payload);
+
+    B_sender.last_packet = packet;
 }
 
 // called when B's timer goes off
