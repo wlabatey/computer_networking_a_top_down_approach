@@ -1,5 +1,5 @@
 CC ?= gcc
-CFLAGS ?= -Wall -pedantic -Wextra -ggdb
+CFLAGS ?= -Werror -Wextra -Wall -pedantic -ggdb
 
 .DEFAULT_GOAL := all
 
