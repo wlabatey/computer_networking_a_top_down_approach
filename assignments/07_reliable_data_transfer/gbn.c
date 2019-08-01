@@ -2,6 +2,7 @@
 #include <stdlib.h> // for malloc, free, srand, rand
 #include <string.h>
 
+
 /*******************************************************************
  ALTERNATING BIT AND GO-BACK-N NETWORK EMULATOR: VERSION 1.1  J.F.Kurose
 
@@ -16,8 +17,9 @@
      (although some can be lost).
 **********************************************************************/
 
-#define BIDIRECTIONAL 0    // change to 1 if you're doing extra credit
-                           // and write a routine called B_output
+
+#define  BIDIRECTIONAL    0    // change to 1 if you're doing extra credit
+                               // and write a routine called B_output
 
 /* a "msg" is the data unit passed from layer 5 (teachers code) to layer
    4 (students' code).  It contains the data (characters) to be delivered
@@ -25,6 +27,7 @@
 struct msg {
     char data[20];
 };
+
 
 /* a packet is the data unit passed from layer 4 (students code) to layer
    3 (teachers code).  Note the pre-defined packet structure, which all
@@ -35,6 +38,7 @@ struct pkt {
     int checksum;
     char payload[20];
 };
+
 
 struct event {
     float evtime;           // event time
@@ -48,6 +52,11 @@ struct event {
 
 //********* STUDENTS WRITE THE NEXT SEVEN ROUTINES *********
 
+#define  PKT_SIZE            sizeof(struct pkt)         // Size of a pkt struct
+#define  MSG_BUFFER_SIZE     50                         // Max amount of messages to buffer in sender while the window is full
+#define  WINDOW_SIZE         8                          // Max amount of packets to send before waiting for ACKs from receiver
+
+
 void init();
 void generate_next_arrival();
 void insertevent(struct event *p);
@@ -56,11 +65,19 @@ void stoptimer(int AorB);
 void tolayer3(int AorB, struct pkt);
 void tolayer5(char datasent[20]);
 
+
+struct receiver {
+    int expected_seqnum;
+} A_receiver, B_receiver;
+
 struct sender {
-    int seqnum;
-    int acknum;
-    struct pkt last_packet;
+    int next_seqnum;
+    int window_base_seqnum;
+    int msg_buffer_count;
+    struct msg *msg_buffer[sizeof(struct msg*) * MSG_BUFFER_SIZE];
+    struct pkt *pkt_buffer[sizeof(struct pkt*) * WINDOW_SIZE];
 } A_sender, B_sender;
+
 
 /* Performs simple checksum on a packet's sequence number,
    acknowledgement number and payload */
@@ -77,31 +94,57 @@ int checksum(int seqnum, int acknum, char payload[20])
     return sum;
 }
 
+
 // called from layer 5, passed the data to be sent to other side
 void A_output(struct msg message)
 {
+    if ( A_sender.msg_buffer_count == 50 ) {
+        printf("\t\tA_sender message buffer is full. Exiting!\n");
+        exit(1);
+    }
+
+    // Handle case where the sending window is full of unACK'd packets and we need to buffer additional messages before sending.
+    // TODO: How/when do we check and send buffered messages that are waiting to be sent?
+    if ( A_sender.next_seqnum > A_sender.window_base_seqnum + WINDOW_SIZE) {
+        struct msg *msg_ptr = malloc(sizeof(struct msg));
+        *msg_ptr = message;
+        A_sender.msg_buffer[A_sender.msg_buffer_count] = msg_ptr;
+        A_sender.msg_buffer_count++;
+        return;
+    }
+
     // Create a packet, with initial seq number, acknum, checksum and payload
-    struct pkt A_out;
+    struct pkt *pkt_ptr = malloc(sizeof(struct pkt));
 
-    A_out.seqnum = A_sender.seqnum;
-    A_out.acknum = A_sender.acknum;
-    A_out.checksum = checksum(A_sender.seqnum, A_sender.acknum, message.data);
+    pkt_ptr->seqnum = A_sender.next_seqnum;
+    pkt_ptr->acknum = 0;
+    pkt_ptr->checksum = checksum(A_sender.next_seqnum, 0, message.data);
 
-    size_t dest_size = sizeof (message.data);
-    strncpy(A_out.payload, message.data, dest_size);
+    size_t dest_size = sizeof(message.data);
+    strncpy(pkt_ptr->payload, message.data, dest_size);
 
-    printf("\t\tA_OUTPUT seq: %d, ack: %d, checksum: %d, payload: %s\n", A_out.seqnum, A_out.acknum, A_out.checksum, A_out.payload);
+    printf("\t\t--------------------\n");
+    printf("\t\tA_OUTPUT begin\n");
+    printf("\t\t--------------------\n");
+    printf("\t\tA_OUTPUT seq: %d, ack: %d, checksum: %d, payload: %s\n", pkt_ptr->seqnum, pkt_ptr->acknum, pkt_ptr->checksum, pkt_ptr->payload);
 
     // Send packet to B
-    tolayer3(0, A_out);
+    tolayer3(0, *pkt_ptr);
 
-    // Alternate seq and ack numbers between 0 and 1
-    A_sender.seqnum = 1 - A_sender.seqnum;
+    // Start timer only when sending first packet of window.
+    if ( A_sender.window_base_seqnum == A_sender.next_seqnum) {
+        printf("\t\tA_OUTPUT starting timer.\n");
+        starttimer(0, 50.0);
+    }
 
-    starttimer(0, 20.0);
+    // Add sent packet to pkt_buffer
+    printf("\t\tA_OUTPUT (A_sender.next_seqnum mod WINDOW_SIZE): %d\n", (A_sender.next_seqnum % WINDOW_SIZE));
+    A_sender.pkt_buffer[A_sender.next_seqnum % WINDOW_SIZE] = pkt_ptr;
+    printf("\t\tEND A_OUTPUT\n");
+    printf("\t\t--------------------\n");
 
-    // Add copy of packet to global for use in fast retransmission (if valid NACK received).
-    A_sender.last_packet = A_out;
+    // Incrementseq number
+    A_sender.next_seqnum++;
 }
 
 
@@ -110,59 +153,124 @@ void A_input(struct pkt packet)
 {
     printf("\t\tA_INPUT seq: %d, ack: %d, checksum: %d, payload: %s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
 
-    // If NACK and checksum is valid, immediately retransmit last packet.
-    // If ACK and valid, stop the timer to prevent it expiring.
     // If packet is corrupt, ignore it.
-
     int csum = checksum(packet.seqnum, packet.acknum, packet.payload);
     if ( csum != packet.checksum ) {
-        printf("\t\tPACKET arriving at A is CORRUPT! Packet checksum %d differs from %d\n", packet.checksum, csum);
+        printf("\t\tPacket arriving at A is CORRUPT! Packet checksum %d differs from %d\n", packet.checksum, csum);
         return;
     }
 
-    // Deal with NACK by doing a fast retransmit.
-    if ( csum == packet.checksum && packet.acknum == (A_sender.last_packet.seqnum - 2)) {
+    // If we receive a NACK, do a fast retransmit.
+    if ( packet.acknum < 0 ) {
         stoptimer(0);
 
-        printf("\t\tA_input received NACK message. Retransmitting last packet. seq: %d, ack: %d, checksum: %d, payload: %s\n", A_sender.last_packet.seqnum, A_sender.last_packet.acknum, A_sender.last_packet.checksum, A_sender.last_packet.payload);
+        printf("\t\tA_input received NACK message. Retransmitting all packets from window_base_seqnum to next_seqnum. seq: %d, ack: %d, checksum: %d, payload: %s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
 
-        tolayer3(0, A_sender.last_packet);
+        printf("\t\t------------------------------\n");
+        printf("\t\tNACK loop: Resending packets in buffer\n");
+        printf("\t\t------------------------------\n");
+        printf("\t\tA_INPUT A_sender.window_base_seqnum: %d\n", A_sender.window_base_seqnum);
+        printf("\t\tA_INPUT A_sender.next_seqnum: %d\n", A_sender.next_seqnum);
+        for (int i = A_sender.window_base_seqnum; i < A_sender.next_seqnum; i++) {
+            int j = i % WINDOW_SIZE;
+            printf("\t\tA_INPUT seq: %d, ack: %d, checksum: %d, payload: %s\n", A_sender.pkt_buffer[j]->seqnum, A_sender.pkt_buffer[j]->acknum, A_sender.pkt_buffer[j]->checksum, A_sender.pkt_buffer[j]->payload);
+            tolayer3(0, *A_sender.pkt_buffer[j]);
+        }
+        printf("\t\tEND OF NACK LOOP\n");
+        printf("\t\t------------------------------\n");
 
-        printf("\t\tA_OUTPUT seq: %d, ack: %d, checksum: %d, payload: %s\n", A_sender.last_packet.seqnum, A_sender.last_packet.acknum, A_sender.last_packet.checksum, A_sender.last_packet.payload);
-
-        starttimer(0, 20.0);
+        starttimer(0, 50.0);
 
         return;
     }
 
-    // Deal with ACK by stopping timer and allowing more data to be sent.
-    if ( csum == packet.checksum && packet.acknum == A_sender.last_packet.seqnum ) {
+    // Deal with ACK by stopping timer & freeing allocated memory
+    // Also, cumulatively ACK and free all packets up to the ACK number
+    if ( packet.acknum > 0 ) {
+        printf("\t\tA_input received ACK message. Stopping timer and freeing memory for buffered packets. seq: %d, ack: %d, checksum: %d, payload: %s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
+
+
+        printf("\t\t------------------------------\n");
+        printf("\t\tACK: free memory from pkt_buffer\n");
+        printf("\t\t------------------------------\n");
+
+        printf("\t\tpacket.acknum: %d\n", packet.acknum);
+        printf("\t\t(packet.acknum mod WINDOW_SIZE): %d\n", packet.acknum % WINDOW_SIZE);
+        printf("\t\tA_sender.window_base_seqnum: %d\n", A_sender.window_base_seqnum);
+        printf("\t\t(A_sender.window_base_seqnum mod WINDOW_SIZE): %d\n", (A_sender.window_base_seqnum % WINDOW_SIZE));
+
+        // Free pkt_buffer from window_base_seqnum to packet.acknum before incrementing window_base_seqnum
+        for (int i = A_sender.window_base_seqnum; i < packet.acknum; i++) {
+            int j = i % WINDOW_SIZE;
+            printf("\t\tACK Loop Free seq: %d, ack: %d, checksum: %d, payload: %s\n", A_sender.pkt_buffer[j]->seqnum, A_sender.pkt_buffer[j]->acknum, A_sender.pkt_buffer[j]->checksum, A_sender.pkt_buffer[j]->payload);
+            free(A_sender.pkt_buffer[j]);
+        }
+        printf("\t\tEND OF ACK FREE LOOP\n");
+        printf("\t\t------------------------------\n");
+
+
+        if ( packet.acknum >= A_sender.window_base_seqnum ) {
+            printf("\t\tA_INPUT incrementing A_sender.window_base.seqnum to %d\n", A_sender.window_base_seqnum);
+
+            // Increment window_base_seqnum
+            A_sender.window_base_seqnum = packet.acknum + 1;
+        }
+
+        // If base sequence number has caught up to next sequence number, stop timer.
+        if ( A_sender.window_base_seqnum == A_sender.next_seqnum ) {
+            printf("\t\t------------------------------\n");
+            printf("\t\tA_sender.window_base_seqnum == A_sender.next_num\n");
+            printf("\t\t------------------------------\n");
+            printf("\t\tA_sender.window_base_seqnum: %d\n", A_sender.window_base_seqnum);
+            printf("\t\tA_sender.next_seqnum: %d\n", A_sender.next_seqnum);
+            printf("\t\t------------------------------\n");
+
+            stoptimer(0);
+
+            return;
+        }
+
+        // If base sequence number is not equal to next sequence number, restart the timer.
         stoptimer(0);
-
-        printf("\t\tA_input received ACK message. Stopping timer. seq: %d, ack: %d, checksum: %d, payload: %s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
-
+        starttimer(0, 50.0);
         return;
     }
 }
+
 
 // called when A's timer goes off
 void A_timerinterrupt()
 {
-    printf("\t\tA_timerinterrupt has gone off. Resending last packet. seq: %d, ack: %d, checksum: %d, payload: %s\n", A_sender.last_packet.seqnum, A_sender.last_packet.acknum, A_sender.last_packet.checksum, A_sender.last_packet.payload);
+    printf("\t\t------------------------------\n");
+    printf("\t\tInterrupt loop\n");
+    printf("\t\t------------------------------\n");
 
-    tolayer3(0, A_sender.last_packet);
+    printf("\t\tA_timerinterrupt A_sender.window_base_seqnum: %d\n", A_sender.window_base_seqnum);
+    printf("\t\tA_timerinterrupt A_sender.next_seqnum: %d\n", A_sender.next_seqnum);
+    printf("\t\tA_timerinterrupt (A_sender.window_base_seqnum mod WINDOW_SIZE): %d\n", (A_sender.window_base_seqnum % WINDOW_SIZE));
+    printf("\t\tA_timerinterrupt (A_sender.next_seqnum mod WINDOW_SIZE): %d\n", (A_sender.next_seqnum % WINDOW_SIZE));
 
-    printf("\t\tA_OUTPUT seq: %d, ack: %d, checksum: %d, payload: %s\n", A_sender.last_packet.seqnum, A_sender.last_packet.acknum, A_sender.last_packet.checksum, A_sender.last_packet.payload);
+    for (int i = A_sender.window_base_seqnum; i < A_sender.next_seqnum; i++) {
+        int j = i % WINDOW_SIZE;
+        printf("\t\tA_timerinterrupt loop counter i: %d\n", i);
+        printf("\t\tA_timerinterrupt modulo counter j: %d\n", j);
+        printf("\t\tA_timerinterrupt seq: %d, ack: %d, checksum: %d, payload: %s\n", A_sender.pkt_buffer[j]->seqnum, A_sender.pkt_buffer[j]->acknum, A_sender.pkt_buffer[j]->checksum, A_sender.pkt_buffer[j]->payload);
+        tolayer3(0, *A_sender.pkt_buffer[j]);
+    }
+    printf("\t\tEND OF INTERRUPT LOOP\n");
+    printf("\t\t------------------------------\n");
 
-    starttimer(0, 20.0);
+    starttimer(0, 50.0);
 }
+
 
 /* the following routine will be called once (only) before any other
    entity A routines are called. You can use it to do any initialization */
 void A_init()
 {
-    A_sender.seqnum = 0;
-    A_sender.acknum = 0;
+    A_sender.next_seqnum = 1;
+    A_sender.window_base_seqnum = 1;
+    A_sender.msg_buffer_count = 0;
 }
 
 /* Note that with simplex transfer from a-to-B, there is no B_output() */
@@ -172,6 +280,7 @@ void B_output(struct msg message)  {
 
 }
 
+
 // called from layer 3, when a packet arrives for layer 4 at B
 void B_input(struct pkt packet)
 {
@@ -179,16 +288,20 @@ void B_input(struct pkt packet)
 
     int csum = checksum(packet.seqnum, packet.acknum, packet.payload);
 
-    // Corrupted packet
-    if ( csum != packet.checksum ) {
-        printf("\t\tPACKET arriving at B is CORRUPT! Packet checksum %d differs from %d\n", packet.checksum, csum);
+    // Send NACK for corrupted packet
+    if ( (csum != packet.checksum) || (packet.seqnum > B_receiver.expected_seqnum) ) {
+        if (csum != packet.checksum) {
+            printf("\t\tB_INPUT Packet is CORRUPT! Packet checksum %d differs from %d\n", packet.checksum, csum);
+        } else {
+            printf("\t\tB_INPUT Packet sequence number %d is not the expected %d\n", packet.seqnum, B_receiver.expected_seqnum);
+        }
 
         struct pkt B_out;
         char payload[20] = {'0'};
 
-        B_out.seqnum = B_sender.seqnum;
-        B_out.acknum = (B_sender.acknum - 2);  // Use negative numbers for NACKs
-        B_out.checksum = checksum(B_sender.seqnum, (B_sender.acknum - 2), payload);
+        B_out.seqnum = 0;
+        B_out.acknum = -(B_receiver.expected_seqnum);
+        B_out.checksum = checksum(0, -(B_receiver.expected_seqnum), payload);
         strncpy(B_out.payload, payload, 20);
 
         printf("\t\tB_INPUT sending NACK. seq: %d, ack: %d, checksum: %d, payload: %s\n", B_out.seqnum, B_out.acknum, B_out.checksum, B_out.payload);
@@ -198,49 +311,58 @@ void B_input(struct pkt packet)
         return;
     }
 
-    // Valid packet
-    printf("\t\tPacket arriving at B is VALID!\n");
+    // TODO: B_sender (bidirectional)
+    // Deal with NACK by stopping timer and retransmitting all packets from B_sender.window_base_seqnum to B_sender.next_seqnum
+    if ( packet.acknum < 0 ) {
+        printf("\t\tB_INPUT received NACK packet. Returning...\n");
+        return;
+    }
+
+    // TODO: B_sender (bidirectional)
+    // Deal with ACK by stopping timer, freeing memory and incrementing B_sender.window_base_seqnum
+    if ( packet.acknum > 0 ) {
+        printf("\t\tB_INPUT received ACK packet. Returning...\n");
+        return;
+    }
 
     struct pkt B_out;
     char payload[20] = {'0'};
 
-    B_out.seqnum = B_sender.seqnum;
-    B_out.acknum = packet.seqnum;
-    B_out.checksum = checksum(B_sender.seqnum, packet.seqnum, payload);
+    B_out.seqnum = 0;
+    B_out.acknum = B_receiver.expected_seqnum;
+    B_out.checksum = checksum(0, B_receiver.expected_seqnum, payload);
     strncpy(B_out.payload, payload, 20);
 
     printf("\t\tB_INPUT sending ACK. seq: %d, ack: %d, checksum: %d, payload: %s\n", B_out.seqnum, B_out.acknum, B_out.checksum, B_out.payload);
 
     tolayer3(1, B_out);
 
-    // Discard previously ACK'd packets after sending ACK.
-    if ( B_sender.last_packet.seqnum != -999 && packet.seqnum == B_sender.last_packet.seqnum ) {
-        printf("\t\tB_INPUT discarding previously ACK'd packet. seq: %d, ack: %d, checksum: %d, payload: %s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
+    // Packet contains new data
+    if ( packet.seqnum == B_receiver.expected_seqnum ) {
+        printf("\t\tB_INPUT received new data packet. seq: %d, ack: %d, checksum: %d, payload :%s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
 
-        return;
+        tolayer5(packet.payload);
+
+        B_receiver.expected_seqnum++;
     }
-
-    // Alternate seq and ack numbers between 0 and 1
-    B_sender.seqnum = 1 - B_sender.seqnum;
-    B_sender.acknum = 1 - B_sender.acknum;
-
-    tolayer5(packet.payload);
-
-    B_sender.last_packet = packet;
 }
+
 
 // called when B's timer goes off
 void B_timerinterrupt()
 {
 }
 
+
 /* the following routine will be called once (only) before any other
    entity B routines are called. You can use it to do any initialization */
 void B_init()
 {
-    B_sender.last_packet.seqnum = -999;
-    B_sender.seqnum = 0;
-    B_sender.acknum = 0;
+    B_receiver.expected_seqnum = 1;
+
+    /*B_sender.next_seqnum = 1;*/
+    /*B_sender.window_base_seqnum = 1;*/
+    /*B_sender.msg_buffer_count = 0;*/
 }
 
 
@@ -265,21 +387,21 @@ struct event *evlist = NULL;  // the event list
 
 
 // possible events
-#define     TIMER_INTERRUPT     0
-#define     FROM_LAYER5         1
-#define     FROM_LAYER3         2
-#define     OFF                 0
-#define     ON                  1
-#define     A                   0
-#define     B                   1
+#define  TIMER_INTERRUPT     0
+#define  FROM_LAYER5         1
+#define  FROM_LAYER3         2
+#define  OFF                 0
+#define  ON                  1
+#define  A                   0
+#define  B                   1
 
 
 int     TRACE       = 3;         // debugging level
 int     nsim        = 0;         // number of messages from 5 to 4 so far
-int     nsimmax     = 20;        // number of msgs to generate, then stop
+int     nsimmax     = 50;        // number of msgs to generate, then stop
 float   lossprob    = 0.2;       // probability that a packet is dropped
 float   corruptprob = 0.1;       // probability that one bit is packet is flipped
-float   lambda      = 2000.00;   // arrival rate of messages from layer 5
+float   lambda      = 25.00;     // arrival rate of messages from layer 5
 float   time;                    // event time
 int     ntolayer3;               // number sent into layer 3
 int     nlost;                   // number lost in media
