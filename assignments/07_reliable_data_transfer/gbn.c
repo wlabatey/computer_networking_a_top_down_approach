@@ -2,7 +2,6 @@
 #include <stdlib.h> // for malloc, free, srand, rand
 #include <string.h>
 
-
 /*******************************************************************
  ALTERNATING BIT AND GO-BACK-N NETWORK EMULATOR: VERSION 1.1  J.F.Kurose
 
@@ -68,15 +67,13 @@ void tolayer5(char datasent[20]);
 
 struct receiver {
     int expected_seqnum;
-} A_receiver, B_receiver;
+} B_receiver;
 
 struct sender {
     int next_seqnum;
     int window_base_seqnum;
-    int msg_buffer_count;
-    struct msg *msg_buffer[sizeof(struct msg*) * MSG_BUFFER_SIZE];
-    struct pkt *pkt_buffer[sizeof(struct pkt*) * WINDOW_SIZE];
-} A_sender, B_sender;
+    struct pkt pkt_buffer[WINDOW_SIZE];
+} A_sender;
 
 
 /* Performs simple checksum on a packet's sequence number,
@@ -98,30 +95,20 @@ int checksum(int seqnum, int acknum, char payload[20])
 // called from layer 5, passed the data to be sent to other side
 void A_output(struct msg message)
 {
-    if ( A_sender.msg_buffer_count == 50 ) {
-        printf("\t\tA_sender message buffer is full. Exiting!\n");
-        exit(1);
-    }
 
-    // Handle case where the sending window is full of unACK'd packets and we need to buffer additional messages before sending.
-    // TODO: How/when do we check and send buffered messages that are waiting to be sent?
     if ( A_sender.next_seqnum > A_sender.window_base_seqnum + WINDOW_SIZE) {
-        struct msg *msg_ptr = malloc(sizeof(struct msg));
-        *msg_ptr = message;
-        A_sender.msg_buffer[A_sender.msg_buffer_count] = msg_ptr;
-        A_sender.msg_buffer_count++;
+        printf("\t\t A_OUTPUT Buffer full. Dropping message: %s\n", message.data);
         return;
     }
 
     // Create a packet, with initial seq number, acknum, checksum and payload
-    struct pkt *pkt_ptr = malloc(sizeof(struct pkt));
+    struct pkt *pkt_ptr = &A_sender.pkt_buffer[A_sender.next_seqnum % WINDOW_SIZE];
 
     pkt_ptr->seqnum = A_sender.next_seqnum;
     pkt_ptr->acknum = 0;
     pkt_ptr->checksum = checksum(A_sender.next_seqnum, 0, message.data);
 
-    size_t dest_size = sizeof(message.data);
-    strncpy(pkt_ptr->payload, message.data, dest_size);
+    memmove(pkt_ptr->payload, message.data, 20);
 
     printf("\t\t--------------------\n");
     printf("\t\tA_OUTPUT begin\n");
@@ -134,12 +121,10 @@ void A_output(struct msg message)
     // Start timer only when sending first packet of window.
     if ( A_sender.window_base_seqnum == A_sender.next_seqnum) {
         printf("\t\tA_OUTPUT starting timer.\n");
-        starttimer(0, 50.0);
+        starttimer(0, 15.0);
     }
 
-    // Add sent packet to pkt_buffer
     printf("\t\tA_OUTPUT (A_sender.next_seqnum mod WINDOW_SIZE): %d\n", (A_sender.next_seqnum % WINDOW_SIZE));
-    A_sender.pkt_buffer[A_sender.next_seqnum % WINDOW_SIZE] = pkt_ptr;
     printf("\t\tEND A_OUTPUT\n");
     printf("\t\t--------------------\n");
 
@@ -173,66 +158,37 @@ void A_input(struct pkt packet)
         printf("\t\tA_INPUT A_sender.next_seqnum: %d\n", A_sender.next_seqnum);
         for (int i = A_sender.window_base_seqnum; i < A_sender.next_seqnum; i++) {
             int j = i % WINDOW_SIZE;
-            printf("\t\tA_INPUT seq: %d, ack: %d, checksum: %d, payload: %s\n", A_sender.pkt_buffer[j]->seqnum, A_sender.pkt_buffer[j]->acknum, A_sender.pkt_buffer[j]->checksum, A_sender.pkt_buffer[j]->payload);
-            tolayer3(0, *A_sender.pkt_buffer[j]);
+            printf("\t\tA_INPUT seq: %d, ack: %d, checksum: %d, payload: %s\n", A_sender.pkt_buffer[j].seqnum, A_sender.pkt_buffer[j].acknum, A_sender.pkt_buffer[j].checksum, A_sender.pkt_buffer[j].payload);
+            tolayer3(0, A_sender.pkt_buffer[j]);
         }
         printf("\t\tEND OF NACK LOOP\n");
         printf("\t\t------------------------------\n");
 
-        starttimer(0, 50.0);
+        starttimer(0, 15.0);
 
         return;
     }
 
-    // Deal with ACK by stopping timer & freeing allocated memory
-    // Also, cumulatively ACK and free all packets up to the ACK number
+    // Deal with ACK by stopping timer
     if ( packet.acknum > 0 ) {
-        printf("\t\tA_input received ACK message. Stopping timer and freeing memory for buffered packets. seq: %d, ack: %d, checksum: %d, payload: %s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
-
-
-        printf("\t\t------------------------------\n");
-        printf("\t\tACK: free memory from pkt_buffer\n");
-        printf("\t\t------------------------------\n");
-
-        printf("\t\tpacket.acknum: %d\n", packet.acknum);
-        printf("\t\t(packet.acknum mod WINDOW_SIZE): %d\n", packet.acknum % WINDOW_SIZE);
-        printf("\t\tA_sender.window_base_seqnum: %d\n", A_sender.window_base_seqnum);
-        printf("\t\t(A_sender.window_base_seqnum mod WINDOW_SIZE): %d\n", (A_sender.window_base_seqnum % WINDOW_SIZE));
-
-        // Free pkt_buffer from window_base_seqnum to packet.acknum before incrementing window_base_seqnum
-        for (int i = A_sender.window_base_seqnum; i < packet.acknum; i++) {
-            int j = i % WINDOW_SIZE;
-            printf("\t\tACK Loop Free seq: %d, ack: %d, checksum: %d, payload: %s\n", A_sender.pkt_buffer[j]->seqnum, A_sender.pkt_buffer[j]->acknum, A_sender.pkt_buffer[j]->checksum, A_sender.pkt_buffer[j]->payload);
-            free(A_sender.pkt_buffer[j]);
-        }
-        printf("\t\tEND OF ACK FREE LOOP\n");
-        printf("\t\t------------------------------\n");
-
+        printf("\t\tA_input received ACK message. Stopping timer. seq: %d, ack: %d, checksum: %d, payload: %s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
 
         if ( packet.acknum >= A_sender.window_base_seqnum ) {
-            printf("\t\tA_INPUT incrementing A_sender.window_base.seqnum to %d\n", A_sender.window_base_seqnum);
+            printf("\t\tA_INPUT incrementing A_sender.window_base.seqnum to %d\n", packet.acknum);
 
             // Increment window_base_seqnum
-            A_sender.window_base_seqnum = packet.acknum + 1;
+            A_sender.window_base_seqnum = packet.acknum;
         }
 
         // If base sequence number has caught up to next sequence number, stop timer.
         if ( A_sender.window_base_seqnum == A_sender.next_seqnum ) {
-            printf("\t\t------------------------------\n");
-            printf("\t\tA_sender.window_base_seqnum == A_sender.next_num\n");
-            printf("\t\t------------------------------\n");
-            printf("\t\tA_sender.window_base_seqnum: %d\n", A_sender.window_base_seqnum);
-            printf("\t\tA_sender.next_seqnum: %d\n", A_sender.next_seqnum);
-            printf("\t\t------------------------------\n");
-
             stoptimer(0);
-
             return;
         }
 
         // If base sequence number is not equal to next sequence number, restart the timer.
         stoptimer(0);
-        starttimer(0, 50.0);
+        starttimer(0, 15.0);
         return;
     }
 }
@@ -245,22 +201,16 @@ void A_timerinterrupt()
     printf("\t\tInterrupt loop\n");
     printf("\t\t------------------------------\n");
 
-    printf("\t\tA_timerinterrupt A_sender.window_base_seqnum: %d\n", A_sender.window_base_seqnum);
-    printf("\t\tA_timerinterrupt A_sender.next_seqnum: %d\n", A_sender.next_seqnum);
-    printf("\t\tA_timerinterrupt (A_sender.window_base_seqnum mod WINDOW_SIZE): %d\n", (A_sender.window_base_seqnum % WINDOW_SIZE));
-    printf("\t\tA_timerinterrupt (A_sender.next_seqnum mod WINDOW_SIZE): %d\n", (A_sender.next_seqnum % WINDOW_SIZE));
-
     for (int i = A_sender.window_base_seqnum; i < A_sender.next_seqnum; i++) {
         int j = i % WINDOW_SIZE;
-        printf("\t\tA_timerinterrupt loop counter i: %d\n", i);
-        printf("\t\tA_timerinterrupt modulo counter j: %d\n", j);
-        printf("\t\tA_timerinterrupt seq: %d, ack: %d, checksum: %d, payload: %s\n", A_sender.pkt_buffer[j]->seqnum, A_sender.pkt_buffer[j]->acknum, A_sender.pkt_buffer[j]->checksum, A_sender.pkt_buffer[j]->payload);
-        tolayer3(0, *A_sender.pkt_buffer[j]);
+        struct pkt *packet = &A_sender.pkt_buffer[j];
+        printf("\t\tA_timerinterrupt  Sending packet: seq: %d, ack: %d, checksum: %d, payload: %s\n", packet->seqnum, packet->acknum, packet->checksum, packet->payload);
+        tolayer3(0, *packet);
     }
     printf("\t\tEND OF INTERRUPT LOOP\n");
     printf("\t\t------------------------------\n");
 
-    starttimer(0, 50.0);
+    starttimer(0, 15.0);
 }
 
 
@@ -270,7 +220,6 @@ void A_init()
 {
     A_sender.next_seqnum = 1;
     A_sender.window_base_seqnum = 1;
-    A_sender.msg_buffer_count = 0;
 }
 
 /* Note that with simplex transfer from a-to-B, there is no B_output() */
@@ -311,20 +260,6 @@ void B_input(struct pkt packet)
         return;
     }
 
-    // TODO: B_sender (bidirectional)
-    // Deal with NACK by stopping timer and retransmitting all packets from B_sender.window_base_seqnum to B_sender.next_seqnum
-    if ( packet.acknum < 0 ) {
-        printf("\t\tB_INPUT received NACK packet. Returning...\n");
-        return;
-    }
-
-    // TODO: B_sender (bidirectional)
-    // Deal with ACK by stopping timer, freeing memory and incrementing B_sender.window_base_seqnum
-    if ( packet.acknum > 0 ) {
-        printf("\t\tB_INPUT received ACK packet. Returning...\n");
-        return;
-    }
-
     struct pkt B_out;
     char payload[20] = {'0'};
 
@@ -339,7 +274,7 @@ void B_input(struct pkt packet)
 
     // Packet contains new data
     if ( packet.seqnum == B_receiver.expected_seqnum ) {
-        printf("\t\tB_INPUT received new data packet. seq: %d, ack: %d, checksum: %d, payload :%s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
+        printf("\t\tB_INPUT received new data packet. seq: %d, ack: %d, checksum: %d, payload: %s\n", packet.seqnum, packet.acknum, packet.checksum, packet.payload);
 
         tolayer5(packet.payload);
 
@@ -359,10 +294,6 @@ void B_timerinterrupt()
 void B_init()
 {
     B_receiver.expected_seqnum = 1;
-
-    /*B_sender.next_seqnum = 1;*/
-    /*B_sender.window_base_seqnum = 1;*/
-    /*B_sender.msg_buffer_count = 0;*/
 }
 
 

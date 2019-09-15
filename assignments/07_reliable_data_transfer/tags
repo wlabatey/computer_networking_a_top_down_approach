@@ -1,0 +1,135 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+.DEFAULT_GOAL	Makefile	/^.DEFAULT_GOAL := all$/;"	m
+A	abp.c	293;"	d	file:
+A	gbn.c	307;"	d	file:
+A_init	abp.c	/^void A_init()$/;"	f
+A_init	gbn.c	/^void A_init()$/;"	f
+A_input	abp.c	/^void A_input(struct pkt packet)$/;"	f
+A_input	gbn.c	/^void A_input(struct pkt packet)$/;"	f
+A_output	abp.c	/^void A_output(struct msg message)$/;"	f
+A_output	gbn.c	/^void A_output(struct msg message)$/;"	f
+A_sender	abp.c	/^} A_sender, B_sender;$/;"	v	typeref:struct:sender
+A_sender	gbn.c	/^} A_sender, B_sender;$/;"	v	typeref:struct:sender
+A_timerinterrupt	abp.c	/^void A_timerinterrupt()$/;"	f
+A_timerinterrupt	gbn.c	/^void A_timerinterrupt()$/;"	f
+B	abp.c	294;"	d	file:
+B	gbn.c	308;"	d	file:
+BIDIRECTIONAL	abp.c	19;"	d	file:
+BIDIRECTIONAL	gbn.c	21;"	d	file:
+B_init	abp.c	/^void B_init()$/;"	f
+B_init	gbn.c	/^void B_init()$/;"	f
+B_input	abp.c	/^void B_input(struct pkt packet)$/;"	f
+B_input	gbn.c	/^void B_input(struct pkt packet)$/;"	f
+B_output	abp.c	/^void B_output(struct msg message)  {$/;"	f
+B_output	gbn.c	/^void B_output(struct msg message)  {$/;"	f
+B_sender	abp.c	/^} A_sender, B_sender;$/;"	v	typeref:struct:sender
+B_sender	gbn.c	/^} A_sender, B_sender;$/;"	v	typeref:struct:sender
+B_timerinterrupt	abp.c	/^void B_timerinterrupt()$/;"	f
+B_timerinterrupt	gbn.c	/^void B_timerinterrupt()$/;"	f
+CC	Makefile	/^CC ?= gcc$/;"	m
+CFLAGS	Makefile	/^CFLAGS ?= -Werror -Wextra -Wall -pedantic -ggdb$/;"	m
+FROM_LAYER3	abp.c	290;"	d	file:
+FROM_LAYER3	gbn.c	304;"	d	file:
+FROM_LAYER5	abp.c	289;"	d	file:
+FROM_LAYER5	gbn.c	303;"	d	file:
+MSG_BUFFER_SIZE	gbn.c	56;"	d	file:
+OFF	abp.c	291;"	d	file:
+OFF	gbn.c	305;"	d	file:
+ON	abp.c	292;"	d	file:
+ON	gbn.c	306;"	d	file:
+PKT_SIZE	gbn.c	55;"	d	file:
+READY	abp.c	/^    READY,$/;"	e	enum:sending_state	file:
+TIMER_INTERRUPT	abp.c	288;"	d	file:
+TIMER_INTERRUPT	gbn.c	302;"	d	file:
+TRACE	abp.c	/^int     TRACE       = 3;         \/\/ debugging level$/;"	v
+TRACE	gbn.c	/^int     TRACE       = 3;         \/\/ debugging level$/;"	v
+WAITING_FOR_ACK	abp.c	/^    WAITING_FOR_ACK$/;"	e	enum:sending_state	file:
+WINDOW_SIZE	gbn.c	57;"	d	file:
+acknum	abp.c	/^    int acknum;$/;"	m	struct:pkt	file:
+acknum	abp.c	/^    int acknum;$/;"	m	struct:sender	file:
+acknum	gbn.c	/^    int acknum;$/;"	m	struct:pkt	file:
+acknum	gbn.c	/^    int acknum;$/;"	m	struct:sender	file:
+checksum	abp.c	/^    int checksum;$/;"	m	struct:pkt	file:
+checksum	abp.c	/^int checksum(int seqnum, int acknum, char payload[20])$/;"	f
+checksum	gbn.c	/^    int checksum;$/;"	m	struct:pkt	file:
+checksum	gbn.c	/^int checksum(int seqnum, int acknum, char payload[20])$/;"	f
+corruptprob	abp.c	/^float   corruptprob = 0.1;       \/\/ probability that one bit is packet is flipped$/;"	v
+corruptprob	gbn.c	/^float   corruptprob = 0.2;       \/\/ probability that one bit is packet is flipped$/;"	v
+data	abp.c	/^    char data[20];$/;"	m	struct:msg	file:
+data	gbn.c	/^    char data[20];$/;"	m	struct:msg	file:
+event	abp.c	/^struct event {$/;"	s	file:
+event	gbn.c	/^struct event {$/;"	s	file:
+eventity	abp.c	/^    int eventity;           \/\/ entity where event occurs$/;"	m	struct:event	file:
+eventity	gbn.c	/^    int eventity;           \/\/ entity where event occurs$/;"	m	struct:event	file:
+evlist	abp.c	/^struct event *evlist = NULL;  \/\/ the event list$/;"	v	typeref:struct:event
+evlist	gbn.c	/^struct event *evlist = NULL;  \/\/ the event list$/;"	v	typeref:struct:event
+evtime	abp.c	/^    float evtime;           \/\/ event time$/;"	m	struct:event	file:
+evtime	gbn.c	/^    float evtime;           \/\/ event time$/;"	m	struct:event	file:
+evtype	abp.c	/^    int evtype;             \/\/ event type code$/;"	m	struct:event	file:
+evtype	gbn.c	/^    int evtype;             \/\/ event type code$/;"	m	struct:event	file:
+generate_next_arrival	abp.c	/^void generate_next_arrival()$/;"	f
+generate_next_arrival	gbn.c	/^void generate_next_arrival()$/;"	f
+init	abp.c	/^void init() {$/;"	f
+init	gbn.c	/^void init() {$/;"	f
+insertevent	abp.c	/^void insertevent(struct event *p)$/;"	f
+insertevent	gbn.c	/^void insertevent(struct event *p)$/;"	f
+jimsrand	abp.c	/^float jimsrand()$/;"	f
+jimsrand	gbn.c	/^float jimsrand()$/;"	f
+lambda	abp.c	/^float   lambda      = 2000.00;   \/\/ arrival rate of messages from layer 5$/;"	v
+lambda	gbn.c	/^float   lambda      = 10.00;     \/\/ arrival rate of messages from layer 5$/;"	v
+last_packet	abp.c	/^    struct pkt last_packet;$/;"	m	struct:sender	typeref:struct:sender::pkt	file:
+lossprob	abp.c	/^float   lossprob    = 0.2;       \/\/ probability that a packet is dropped$/;"	v
+lossprob	gbn.c	/^float   lossprob    = 0.2;       \/\/ probability that a packet is dropped$/;"	v
+main	abp.c	/^int main()$/;"	f
+main	gbn.c	/^int main()$/;"	f
+msg	abp.c	/^struct msg {$/;"	s	file:
+msg	gbn.c	/^struct msg {$/;"	s	file:
+msg_buffer	gbn.c	/^    struct msg *msg_buffer[sizeof(struct msg*) * MSG_BUFFER_SIZE];$/;"	m	struct:sender	typeref:struct:sender::msg	file:
+msg_buffer_count	gbn.c	/^    int msg_buffer_count;$/;"	m	struct:sender	file:
+ncorrupt	abp.c	/^int     ncorrupt;                \/\/ number corrupted by media$/;"	v
+ncorrupt	gbn.c	/^int     ncorrupt;                \/\/ number corrupted by media$/;"	v
+next	abp.c	/^    struct event *next;$/;"	m	struct:event	typeref:struct:event::event	file:
+next	gbn.c	/^    struct event *next;$/;"	m	struct:event	typeref:struct:event::event	file:
+nlost	abp.c	/^int     nlost;                   \/\/ number lost in media$/;"	v
+nlost	gbn.c	/^int     nlost;                   \/\/ number lost in media$/;"	v
+nsim	abp.c	/^int     nsim        = 0;         \/\/ number of messages from 5 to 4 so far$/;"	v
+nsim	gbn.c	/^int     nsim        = 0;         \/\/ number of messages from 5 to 4 so far$/;"	v
+nsimmax	abp.c	/^int     nsimmax     = 20;        \/\/ number of msgs to generate, then stop$/;"	v
+nsimmax	gbn.c	/^int     nsimmax     = 20;        \/\/ number of msgs to generate, then stop$/;"	v
+ntolayer3	abp.c	/^int     ntolayer3;               \/\/ number sent into layer 3$/;"	v
+ntolayer3	gbn.c	/^int     ntolayer3;               \/\/ number sent into layer 3$/;"	v
+payload	abp.c	/^    char payload[20];$/;"	m	struct:pkt	file:
+payload	gbn.c	/^    char payload[20];$/;"	m	struct:pkt	file:
+pkt	abp.c	/^struct pkt {$/;"	s	file:
+pkt	gbn.c	/^struct pkt {$/;"	s	file:
+pkt_buffer	gbn.c	/^    struct pkt *pkt_buffer[sizeof(struct pkt*) * WINDOW_SIZE];$/;"	m	struct:sender	typeref:struct:sender::pkt	file:
+pktptr	abp.c	/^    struct pkt *pktptr;     \/\/ pointer to packet (if any) assoc w\/ this event$/;"	m	struct:event	typeref:struct:event::pkt	file:
+pktptr	gbn.c	/^    struct pkt *pktptr;     \/\/ pointer to packet (if any) assoc w\/ this event$/;"	m	struct:event	typeref:struct:event::pkt	file:
+prev	abp.c	/^    struct event *prev;$/;"	m	struct:event	typeref:struct:event::event	file:
+prev	gbn.c	/^    struct event *prev;$/;"	m	struct:event	typeref:struct:event::event	file:
+printevlist	abp.c	/^void printevlist()$/;"	f
+printevlist	gbn.c	/^void printevlist()$/;"	f
+sender	abp.c	/^struct sender {$/;"	s	file:
+sender	gbn.c	/^struct sender {$/;"	s	file:
+sending_state	abp.c	/^    enum sending_state sending_state;$/;"	m	struct:sender	typeref:enum:sender::sending_state	file:
+sending_state	abp.c	/^enum sending_state {$/;"	g	file:
+seqnum	abp.c	/^    int seqnum;$/;"	m	struct:pkt	file:
+seqnum	abp.c	/^    int seqnum;$/;"	m	struct:sender	file:
+seqnum	gbn.c	/^    int seqnum;$/;"	m	struct:pkt	file:
+seqnum	gbn.c	/^    int seqnum;$/;"	m	struct:sender	file:
+starttimer	abp.c	/^void starttimer(int AorB, float increment)  \/\/ A or B is trying to start timer$/;"	f
+starttimer	gbn.c	/^void starttimer(int AorB, float increment)  \/\/ A or B is trying to start timer$/;"	f
+stoptimer	abp.c	/^void stoptimer(int AorB)  \/\/ A or B is trying to stop timer$/;"	f
+stoptimer	gbn.c	/^void stoptimer(int AorB)  \/\/ A or B is trying to stop timer$/;"	f
+time	abp.c	/^float   time;                    \/\/ event time$/;"	v
+time	gbn.c	/^float   time;                    \/\/ event time$/;"	v
+tolayer3	abp.c	/^void tolayer3(int AorB, struct pkt packet)  \/\/ A or B is trying to stop timer$/;"	f
+tolayer3	gbn.c	/^void tolayer3(int AorB, struct pkt packet)  \/\/ A or B is trying to stop timer$/;"	f
+tolayer5	abp.c	/^void tolayer5(char datasent[20])$/;"	f
+tolayer5	gbn.c	/^void tolayer5(char datasent[20])$/;"	f
+window_size	gbn.c	/^    int window_size;$/;"	m	struct:sender	file:
