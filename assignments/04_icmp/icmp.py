@@ -18,6 +18,7 @@ ICMP_ECHO_REQUEST = 8
 
 parser = argparse.ArgumentParser()
 parser.add_argument("ping_target")
+parser.add_argument("-t", "--timeout", type=int, default=1, help="Specify the time to wait until a ping reply is received.")
 args = parser.parse_args()
 
 
@@ -110,7 +111,7 @@ def start_ping(dest_addr, timeout):
     return delay
 
 
-def ping(host, timeout=1):
+def ping(host, timeout):
     # timeout=1 means: If one second goes by without a reply from the server,
     # the client assumes that either the client's ping or the server's pong is lost
 
@@ -126,4 +127,4 @@ def ping(host, timeout=1):
 
     return delay
 
-ping(args.ping_target)
+ping(args.ping_target, args.timeout)
