@@ -102,7 +102,7 @@ def checksum(string):
         count = count + 2
 
     if countTo < len(string):
-        csum = csum + ord(string[len(string)  1])
+        csum = csum + ord(string[len(string) - 1])
         csum = csum & 0xffffffff
 
     csum = (csum >> 16) + (csum & 0xffff)
@@ -120,7 +120,7 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
     while 1:
         startedSelect = time.time()
         whatReady = select.select([mySocket], [], [], timeLeft)
-        howLongInSelect = (time.time()  startedSelect)
+        howLongInSelect = (time.time() - startedSelect)
         if whatReady[0] == []: # Timeout
             return "Request timed out."
 
@@ -134,7 +134,7 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
 
     #Fill in end
 
-    timeLeft = timeLeft  howLongInSelect
+    timeLeft = timeLeft - howLongInSelect
 
     if timeLeft <= 0:
         return "Request timed out."
@@ -145,7 +145,7 @@ def sendOnePing(mySocket, destAddr, ID):
     myChecksum = 0
 
     # Make a dummy header with a 0 checksum
-    # struct  Interpret strings as packed binary data
+    # struct interpret strings as packed binary data
     header = struct.pack("bbHHh", ICMP_ECHO_REQUEST, 0, myChecksum, ID, 1)
     data = struct.pack("d", time.time())
 
@@ -172,7 +172,7 @@ def doOnePing(destAddr, timeout):
 
     # SOCK_RAW is a powerful socket type. For more details: http://sockraw.org/papers/sock_raw
     mySocket = socket(AF_INET, SOCK_RAW, icmp)
-    myID = os.getpid() & 0xFFFF # Return the current process i
+    myID = os.getpid() & 0xFFFF # Return the current process id
     sendOnePing(mySocket, destAddr, myID)
     delay = receiveOnePing(mySocket, myID, timeout, destAddr)
     mySocket.close()
