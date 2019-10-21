@@ -57,7 +57,7 @@ def receive_ping(my_socket, ID, timeout, dest_addr):
 
 
     time_received = time.time()
-    recv_packetet, addr = my_socket.recvfrom(1024)
+    recv_packet, addr = my_socket.recvfrom(1024)
 
     #Fill in start
 
@@ -103,9 +103,9 @@ def start_ping(dest_addr, timeout):
 
     # SOCK_RAW is a powerful socket type. For more details: http://sockraw.org/papers/sock_raw
     my_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, icmp)
-    myID = os.getpid() & 0xFFFF # Return the current process id
-    send_ping(my_socket, dest_addr, myID)
-    delay = receive_ping(my_socket, myID, timeout, dest_addr)
+    my_pid = os.getpid() & 0xFFFF # Return the current process id
+    send_ping(my_socket, dest_addr, my_pid)
+    delay = receive_ping(my_socket, my_pid, timeout, dest_addr)
     my_socket.close()
 
     return delay
