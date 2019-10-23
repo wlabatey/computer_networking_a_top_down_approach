@@ -22,18 +22,18 @@ parser.add_argument("-t", "--timeout", type=int, default=1, help="Specify the ti
 args = parser.parse_args()
 
 
-def checksum(string):
+def checksum(packet_bytes):
     csum = 0
-    count_to = (len(string) // 2) * 2
+    count_to = (len(packet_bytes) // 2) * 2
     count = 0
     while count < count_to:
-        thisVal = ord(string[count+1]) * 256 + ord(string[count])
-        csum = csum + thisVal
+        this_val = packet_bytes[count+1] * 256 + packet_bytes[count]
+        csum = csum + this_val
         csum = csum & 0xffffffff
         count = count + 2
 
-    if count_to < len(string):
-        csum = csum + ord(string[len(string) - 1])
+    if count_to < len(packet_bytes):
+        csum = csum + packet_bytes[len(packet_bytes) - 1]
         csum = csum & 0xffffffff
 
     csum = (csum >> 16) + (csum & 0xffff)
@@ -48,7 +48,7 @@ def checksum(string):
 def receive_ping(my_socket, ID, timeout, dest_addr):
     time_left = timeout
 
-    while 1:
+    while True:
         started_select = time.time()
         status = select.select([my_socket], [], [], time_left)
         select_length = (time.time() - started_select)
@@ -81,7 +81,9 @@ def send_ping(my_socket, dest_addr, ID):
     data = struct.pack("d", time.time())
 
     # Calculate the checksum on the data and the dummy header.
-    packet_checksum = checksum(str(header + data))
+    packet = header + data
+    packet_checksum = checksum(packet)
+    print("packet_checksum: {0:#0x}".format(packet_checksum))
 
     # Get the right checksum, and put in the header
     if sys.platform == 'darwin':
@@ -112,18 +114,16 @@ def start_ping(dest_addr, timeout):
 
 
 def ping(host, timeout):
-    # timeout=1 means: If one second goes by without a reply from the server,
+    # timeout: If the value in seconds goes by without a reply from the server,
     # the client assumes that either the client's ping or the server's pong is lost
 
     dest = socket.gethostbyname(host)
-    print("Pinging " + dest + " using Python:")
-    print("")
+    print("Pinging " + dest + " using Python:\n")
 
     # Send ping requests to a server separated by approximately one second
-    while 1:
+    while True:
         delay = start_ping(dest, timeout)
-        print(delay)
-        time.sleep(1)# one second
+        time.sleep(1)  # one second
 
     return delay
 
