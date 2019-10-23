@@ -52,16 +52,19 @@ def receive_ping(my_socket, ID, timeout, dest_addr):
         started_select = time.time()
         status = select.select([my_socket], [], [], time_left)
         select_length = (time.time() - started_select)
-        if status[0] == []: # Timeout
-            return "Request timed out."
 
+        if not status[0]: # Timeout
+            return "Request timed out."
+        else:
+            break
 
     time_received = time.time()
     recv_packet, addr = my_socket.recvfrom(1024)
 
     #Fill in start
-
     #Fetch the ICMP header from the IP packet
+    header = struct.unpack_from("bbHHh", recv_packet, offset=20)
+    print("header: {}".format(header))
 
     #Fill in end
 
