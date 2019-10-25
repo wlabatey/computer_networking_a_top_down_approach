@@ -81,7 +81,8 @@ def receive_ping(my_socket, ID, timeout, dest_addr):
     if reply_checksum == local_checksum:
         print("Checksums match!")
 
-    #Fill in end
+    # TODO: Parse the icmp id and sequence number to calculate
+    #       the RTT for each ping.
 
     time_left = time_left - select_length
 
@@ -113,9 +114,6 @@ def send_ping(my_socket, dest_addr, ID):
     packet = header + data
     my_socket.sendto(packet, (dest_addr, 1)) # socket.AF_INET address must be tuple, not str
 
-    # Both LISTS and TUPLES consist of a number of objects
-    # which can be referenced by their position number within the object.
-
 
 def start_ping(dest_addr, timeout):
     icmp = socket.getprotobyname("icmp")
@@ -133,7 +131,6 @@ def start_ping(dest_addr, timeout):
 def ping(host, timeout):
     # timeout: If the value in seconds goes by without a reply from the server,
     # the client assumes that either the client's ping or the server's pong is lost
-
     dest = socket.gethostbyname(host)
     print("Pinging " + dest + " using Python:\n")
 
