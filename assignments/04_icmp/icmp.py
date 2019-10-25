@@ -61,10 +61,25 @@ def receive_ping(my_socket, ID, timeout, dest_addr):
     time_received = time.time()
     recv_packet, addr = my_socket.recvfrom(1024)
 
-    #Fill in start
-    #Fetch the ICMP header from the IP packet
-    header = struct.unpack_from("bbHHh", recv_packet, offset=20)
-    print("header: {}".format(header))
+    socket_data = bytearray(recv_packet)
+    icmp_packet_ba = socket_data[20:]
+
+    icmp_checksum = icmp_packet_ba[2:4]
+    icmp_checksum = struct.unpack("H", icmp_checksum)[0]
+
+    # Zero the original ICMP checksum value so we can
+    # calculate our own checksum for comparison
+    icmp_packet_ba[2:4] = b"\x00\x00"
+
+    if sys.platform == "darwin":
+        reply_checksum = socket.ntohs(icmp_checksum) & 0xffff
+    else:
+        reply_checksum = socket.ntohs(icmp_checksum)
+
+    local_checksum = checksum(bytes(icmp_packet_ba))
+
+    if reply_checksum == local_checksum:
+        print("Checksums match!")
 
     #Fill in end
 
@@ -86,7 +101,6 @@ def send_ping(my_socket, dest_addr, ID):
     # Calculate the checksum on the data and the dummy header.
     packet = header + data
     packet_checksum = checksum(packet)
-    print("packet_checksum: {0:#0x}".format(packet_checksum))
 
     # Get the right checksum, and put in the header
     if sys.platform == 'darwin':
