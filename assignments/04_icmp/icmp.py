@@ -26,7 +26,7 @@ args = parser.parse_args()
 
 class Pinger:
     def __init__(self, target_ip, timeout):
-        self.target_ip = target_ip
+        self.target_ip = socket.gethostbyname(target_ip)
         self.target_host = socket.gethostbyaddr(target_ip)[0]
         self.timeout = timeout
         self.icmp_seq = 1
@@ -82,7 +82,6 @@ class Pinger:
 
         time_received = time.time()
         recv_packet, addr = my_socket.recvfrom(1024)
-        self.packet_received_count += 1
 
         socket_data = bytearray(recv_packet)
         ip_packet_ba = socket_data[0:21]
@@ -96,12 +95,18 @@ class Pinger:
         icmp_seq = icmp_packet_ba[6:8]
         icmp_date = icmp_packet_ba[-8:]
 
-        ip_src = ".".join(str(x) for x in ip_src)
+        ip_src = socket.inet_ntoa(ip_src)
         icmp_checksum = struct.unpack("!H", icmp_checksum)[0]
         icmp_id = struct.unpack("<H", icmp_id)[0]
         icmp_seq = struct.unpack("<H", icmp_seq)[0]
         icmp_date = struct.unpack("<d", icmp_date)[0]
         time_diff = (time_received - icmp_date) * 1000
+
+        # Ignore reply if the ID field doesn't match ours.
+        if icmp_id != self.icmp_id:
+            return
+
+        self.packet_received_count += 1
 
         host_rev_lookup = socket.gethostbyaddr(ip_src)
 
@@ -116,8 +121,9 @@ class Pinger:
 
         local_checksum = self.checksum(bytes(icmp_packet_ba))
 
+        # Ignore replies with incorrect checksums
         if reply_checksum != local_checksum:
-            return "Bad checksum."
+            return
 
         print("{} bytes from {} ({})".format(icmp_length, host_rev_lookup[0], ip_src), end=": ")
         print("icmp_seq={}".format(icmp_seq), end=" ")
