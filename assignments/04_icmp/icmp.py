@@ -128,7 +128,7 @@ class Pinger:
         print("{} bytes from {} ({})".format(icmp_length, host_rev_lookup[0], ip_src), end=": ")
         print("icmp_seq={}".format(icmp_seq), end=" ")
         print("ttl={}".format(ip_ttl), end=" ")
-        print("time={:.0f}ms".format(time_diff))
+        print("time={0:.3g}ms".format(time_diff))
 
 
     def send_ping(self, my_socket, dest_addr):
