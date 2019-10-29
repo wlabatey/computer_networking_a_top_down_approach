@@ -27,7 +27,12 @@ args = parser.parse_args()
 class Pinger:
     def __init__(self, target_ip, timeout):
         self.target_ip = socket.gethostbyname(target_ip)
-        self.target_host = socket.gethostbyaddr(target_ip)[0]
+
+        try:
+            self.target_host = socket.gethostbyaddr(target_ip)[0]
+        except socket.herror:
+            self.target_host = self.target_ip
+
         self.timeout = timeout
         self.icmp_seq = 1
         self.icmp_id = os.getpid() & 0xFFFF
@@ -41,7 +46,12 @@ class Pinger:
 
     def calculate_statistics(self, sig_num, stack_frame):
         print("\n--- {} ping statistics ---".format(self.target_ip))
-        print(self.__dict__)
+        packet_stats = ("{} packets transmitted, "
+                        "{} packets received, "
+                        "{:.0f}% packet loss".format(self.packet_sent_count,
+                                                     self.packet_received_count,
+                                                     (1 - (self.packet_received_count / self.packet_sent_count)) * 100))
+        print(packet_stats)
         sys.exit(0)
 
     def checksum(self, packet_bytes):
@@ -108,8 +118,6 @@ class Pinger:
 
         self.packet_received_count += 1
 
-        host_rev_lookup = socket.gethostbyaddr(ip_src)
-
         # Zero the original ICMP checksum value so we can
         # calculate our own checksum for comparison
         icmp_packet_ba[2:4] = b"\x00\x00"
@@ -125,7 +133,7 @@ class Pinger:
         if reply_checksum != local_checksum:
             return
 
-        print("{} bytes from {} ({})".format(icmp_length, host_rev_lookup[0], ip_src), end=": ")
+        print("{} bytes from {} ({})".format(icmp_length, self.target_host, ip_src), end=": ")
         print("icmp_seq={}".format(icmp_seq), end=" ")
         print("ttl={}".format(ip_ttl), end=" ")
         print("time={0:.3g}ms".format(time_diff))
