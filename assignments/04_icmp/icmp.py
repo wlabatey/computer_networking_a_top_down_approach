@@ -7,11 +7,12 @@
 import argparse
 import binascii
 import os
+import select
 import signal
 import socket
-import sys
+import statistics
 import struct
-import select
+import sys
 import time
 
 
@@ -39,12 +40,23 @@ class Pinger:
         self.packet_sent_count = 0
         self.packet_received_count = 0
         self.packet_loss = 0.0
+        self.rtt_list = []
         self.rtt_min = 0.0
         self.rtt_avg = 0.0
         self.rtt_max = 0.0
         self.rtt_mdev = 0.0
 
     def calculate_statistics(self, sig_num, stack_frame):
+        self.rtt_min = min(self.rtt_list)
+        self.rtt_max = max(self.rtt_list)
+        self.rtt_avg = statistics.median(self.rtt_list)
+
+        # Set mdev to 0 when less than 2 data points in self.rtt_list
+        try:
+            self.rtt_mdev = statistics.stdev(self.rtt_list)
+        except statistics.StatisticsError:
+            self.rtt_mdev = 0
+
         print("\n--- {} ping statistics ---".format(self.target_ip))
         packet_stats = ("{} packets transmitted, "
                         "{} packets received, "
@@ -52,6 +64,12 @@ class Pinger:
                                                      self.packet_received_count,
                                                      (1 - (self.packet_received_count / self.packet_sent_count)) * 100))
         print(packet_stats)
+
+        rtt_stats = ("rtt min/avg/max/mdev = {:.3f}/{:.3f}/{:.3f}/{:.3f} ms".format(self.rtt_min,
+                                                                    self.rtt_avg,
+                                                                    self.rtt_max,
+                                                                    self.rtt_mdev))
+        print(rtt_stats)
         sys.exit(0)
 
     def checksum(self, packet_bytes):
@@ -111,6 +129,7 @@ class Pinger:
         icmp_seq = struct.unpack("<H", icmp_seq)[0]
         icmp_date = struct.unpack("<d", icmp_date)[0]
         time_diff = (time_received - icmp_date) * 1000
+        self.rtt_list.append(time_diff)
 
         # Ignore reply if the ID field doesn't match ours.
         if icmp_id != self.icmp_id:
