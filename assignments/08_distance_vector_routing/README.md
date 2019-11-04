@@ -182,8 +182,8 @@ update the distance table and may (or may not) have to send updated
 routing packets to neighboring nodes.
 
 In order to complete the advanced part of the assignment, you will need
-to change the value of the constant LINKCHANGES (line 3 in `prog3.c)` to
-1. FYI, the cost of the link will change from 1 to 20 at time 10000 and
+to change the value of the constant LINKCHANGES (line 3 in `prog3.c)` to 1.
+FYI, the cost of the link will change from 1 to 20 at time 10000 and
 then change back to 1 at time 20000. Your routines will be invoked at
 these times.
 
