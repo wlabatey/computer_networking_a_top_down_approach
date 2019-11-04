@@ -8,6 +8,7 @@ that implement a distributed asynchronous distance vector routing for
 the network shown in Figure Lab.4-1.
 
 ![](images/pa3fig1.gif)
+
 **Figure Lab.4-1:** Network topology and link costs for DV routing lab
 
 ### The Basic Assignment
@@ -64,6 +65,7 @@ Similar routines are defined for nodes 1, 2 and 3. Thus, you will write
 `rtinit0(), rtinit1(), rtinit2(), rtinit3(),rtupdate0(),  rtupdate1(), rtupdate2(), rtupdate3()`
 
 ![](images/pa3fig2.gif)
+
 **Figure Lab.4-2:** Relationship between procedures inside node 0
 
 ### Software Interfaces
@@ -136,12 +138,12 @@ four distinct nodes.
 To compile your routines: `cc prog3.c node0.c node1.c node2.c node3.c`
 
 Prototype versions of these files are here:
+
 [node0.c](http://gaia.cs.umass.edu/kurose/network/node0.c),
 [node1.c](http://gaia.cs.umass.edu/kurose/network/node1.c),
 [node2.c](http://gaia.cs.umass.edu/kurose/network/node2.c),
-[node3.c](http://gaia.cs.umass.edu/kurose/network/node3.c). You can pick
-up a copy of the file prog3.c at
-<http://gaia.cs.umass.edu/kurose/network/prog3.c>.
+[node3.c](http://gaia.cs.umass.edu/kurose/network/node3.c).
+[prog3.c](http://gaia.cs.umass.edu/kurose/network/prog3.c).
 
 **This assignment can be completed on any machine supporting C. It makes
 no use of UNIX features.**
@@ -195,7 +197,8 @@ The documentation above describes the project in detail. Here we
 provide a link to the code needed to do the assignment in JAVA. Make
 sure you understand the material above.
 
-The JAVA code you'll need can be found here <http://gaia.cs.umass.edu/cs453_fall_2010/hw_pa_labs/distance_vector_java_code>.
+The JAVA code you'll need can be found here:
+<http://gaia.cs.umass.edu/cs453_fall_2010/hw_pa_labs/distance_vector_java_code>.
 
 Here are the individual files you'll need: Entity.java, Entity0.java,
 Entity1.java, Entity2.java, Entity3.java, NetworkSimulator.java,
@@ -217,5 +220,5 @@ please be extra careful there.
 
 When we've taught this lab in our introductory networking course,
 students have posed various questions. If you are interested in looking
-at the questions we've received (and answers), check out
-[http://gaia.cs.umass.edu/kurose/network/programming_assignment_QA.html](http://gaia.cs.umass.edu/kurose/network/programming_assignment_QA.htm)
+at the questions we've received (and answers), check out:
+<http://gaia.cs.umass.edu/kurose/network/programming_assignment_QA.htm>.
