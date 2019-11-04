@@ -217,4 +217,6 @@ please be extra careful there.
 When we've taught this lab in our introductory networking course,
 students have posed various questions. If you are interested in looking
 at the questions we've received (and answers), check out:
-<http://gaia.cs.umass.edu/kurose/network/programming_assignment_QA.htm>.
+(qa.md)[qa.md]. The original page is available at <http://gaia.cs.umass.edu/kurose/network/programming_assignment_QA.htm>.
+
+

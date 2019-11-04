@@ -1,10 +1,12 @@
 **CMPSCI 591E**
+
 Computer Networking
+
 Fall 2000
+
 Professor Jim Kurose
 
-Programming Assignment 3: Questions and Answers about the assignment
-====================================================================
+## Programming Assignment 3: Questions and Answers about the assignment
 
 Some of us are having a problem compiling Jim's code with our own,
 because the compiler claims that the time variable has not been
