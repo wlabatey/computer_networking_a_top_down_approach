@@ -75,26 +75,27 @@ written the following routines that can be called by your routines:
 
 `tolayer2(struct rtpkt pkt2send)`
 
-:   where `rtpkt` is the following structure, which is already declared
-    for you. The procedure `tolayer2()` is defined in the file
-    [prog3.c](http://gaia.cs.umass.edu/kurose/network/prog3.c)
+where `rtpkt` is the following structure, which is already declared
+for you. The procedure `tolayer2()` is defined in the file
+[prog3.c](http://gaia.cs.umass.edu/kurose/network/prog3.c)
 
-        extern struct rtpkt {
-          int sourceid;  /* id of node sending this pkt, 0, 1, 2, or 3 */
-          int destid;    /* id of router to which pkt being sent
-                            (must be an immediate neighbor) */
-          int mincost[4];    /* min cost to node 0 ... 3 */
-          };
+```
+extern struct rtpkt {
+    int sourceid;  /* id of node sending this pkt, 0, 1, 2, or 3 */
+    int destid;    /* id of router to which pkt being sent
+                    (must be an immediate neighbor) */
+    int mincost[4];    /* min cost to node 0 ... 3 */
+    };
+```
 
-    Note that `tolayer2() `is passed a structure, not a pointer to a
-    structure.
+Note that `tolayer2()` is passed a structure, not a pointer to a
+structure.
 
-`printdt0()`
-:   will pretty print the distance table for node 0. It is passed a
-    pointer to a structure of type `distance_table.` `printdt0()` and
-    the structure declaration for the node 0 distance table are declared
-    in the file `node0.c.` Similar pretty-print routines are defined for
-    you in the files `node1.c, node2.c node3.c.`
+`printdt0()` will pretty print the distance table for node 0. It is
+passed a pointer to a structure of type `distance_table.` `printdt0()`
+and the structure declaration for the node 0 distance table are declared
+in the file `node0.c.` Similar pretty-print routines are defined for
+you in the files `node1.c, node2.c node3.c.`
 
 ### The Simulated Network Environment
 
@@ -128,14 +129,14 @@ implement a distributed, asynchronous computation of the distance tables
 for the topology and costs shown in Figure 1.
 
 You should put your procedures for nodes 0 through 3 in files called
-node0.c, .... node3.c. You are **NOT** allowed to declare any global
-variables that are visible outside of a given C file (e.g., any global
+node0.c, node1.c, node2.c and node3.c. You are **NOT** allowed to declare
+any global variables that are visible outside of a given C file (e.g., any global
 variables you define in `node0.c.` may only be accessed inside
 `node0.c`). This is to force you to abide by the coding conventions that
 you would have to adopt is you were really running the procedures in
 four distinct nodes.
 
-To compile your routines: `cc prog3.c node0.c node1.c node2.c node3.c`
+To compile your routines: `gcc prog3.c node0.c node1.c node2.c node3.c`
 
 Prototype versions of these files are here:
 
