@@ -201,17 +201,12 @@ sure you understand the material above.
 The JAVA code you'll need can be found here:
 <http://gaia.cs.umass.edu/cs453_fall_2010/hw_pa_labs/distance_vector_java_code>.
 
-Here are the individual files you'll need: Entity.java, Entity0.java,
-Entity1.java, Entity2.java, Entity3.java, NetworkSimulator.java,
-Event.java, Packet.java, EventList.java, EventListImpl.java,
-Project.java
-
 You'll the write the constructors of Entity0.java, Entity1.java,
 Entity2.java, and Entity3.java which are analogous to rtinit0(),
 rtinit1(), rtinit2() and rtinit3() in the C version. You will also need
 to write the update() methods for Entity0.java, Entity1.java,
 Entity2.java, andEntity3.java which are analogous to rtupdate0(),
-rtupdate1(), riupdate2() and rtupdate3() in the C version./
+rtupdate1(), riupdate2() and rtupdate3() in the C version.
 
 Note that the Java code will allow you to hang yourself by sending
 incorrect packets via the toLayer2()method of NetworkSimulator. So
