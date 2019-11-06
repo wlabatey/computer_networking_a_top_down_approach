@@ -2,10 +2,9 @@
 
 extern struct rtpkt {
     int sourceid;       /* id of sending router sending this pkt */
-    int destid;         /* id of router to which pkt being sent
-                            (must be an immediate neighbor) */
+    int destid;         /* id of router to which pkt being sent (must be an immediate neighbor) */
     int mincost[4];    /* min cost to node 0 ... 3 */
-  };
+};
 
 
 extern int TRACE;
@@ -22,17 +21,17 @@ struct distance_table {
 /* students to write the following two routines, and maybe some others */
 
 
-rtinit1() {
+void rtinit1() {
 
 }
 
 
-rtupdate1(struct rtpkt *rcvdpkt) {
+void rtupdate1(struct rtpkt *rcvdpkt) {
 
 }
 
 
-printdt1(struct distance_table *dtptr) {
+void printdt1(struct distance_table *dtptr) {
     printf("             via   \n");
     printf("   D1 |    0     2 \n");
     printf("  ----|-----------\n");
@@ -47,6 +46,6 @@ printdt1(struct distance_table *dtptr) {
 /* You can leave this routine empty if you're an undergrad. If you want */
 /* to use this routine, you'll need to change the value of the LINKCHANGE */
 /* constant definition in prog3.c from 0 to 1 */
-linkhandler1(int linkid, int newcost) {
+void linkhandler1(int linkid, int newcost) {
 
 }

@@ -2,18 +2,20 @@
 
 extern struct rtpkt {
     int sourceid;       /* id of sending router sending this pkt */
-    int destid;         /* id of router to which pkt being sent
-                            (must be an immediate neighbor) */
+    int destid;         /* id of router to which pkt being sent (must be an immediate neighbor) */
     int mincost[4];    /* min cost to node 0 ... 3 */
 };
+
 
 extern int TRACE;
 extern int YES;
 extern int NO;
 
+
 struct distance_table {
     int costs[4][4];
 } dt3;
+
 
 /* students to write the following two routines, and maybe some others */
 
@@ -26,8 +28,7 @@ void rtupdate3(struct rtpkt *rcvdpkt) {
 }
 
 
-printdt3(struct distance_table *dtptr)
-{
+void printdt3(struct distance_table *dtptr) {
     printf("             via     \n");
     printf("   D3 |    0     2 \n");
     printf("  ----|-----------\n");

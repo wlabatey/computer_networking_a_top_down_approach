@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #define LINKCHANGES 1
 
@@ -25,7 +26,7 @@ int YES = 1;
 int NO = 0;
 
 
-creatertpkt(struct rtpkt *initrtpkt, int srcid, int destid, int mincosts[]) {
+void creatertpkt(struct rtpkt *initrtpkt, int srcid, int destid, int mincosts[]) {
     int i;
     initrtpkt->sourceid = srcid;
     initrtpkt->destid = destid;
@@ -78,7 +79,7 @@ int main() {
 
         if (eventptr == NULL) {
             printf("\nSimulator terminated at t=%f, no packets in medium\n", clocktime);
-            exit(0)
+            exit(0);
         }
 
         evlist = evlist->next;      /* remove this event from event list */
@@ -104,12 +105,16 @@ int main() {
         if (eventptr->evtype == FROM_LAYER2 ) {
             if (eventptr->eventity == 0) {
                 rtupdate0(eventptr->rtpktptr);
-            else if (eventptr->eventity == 1)
+            }
+            else if (eventptr->eventity == 1) {
                 rtupdate1(eventptr->rtpktptr);
-            else if (eventptr->eventity == 2)
+            }
+            else if (eventptr->eventity == 2) {
                 rtupdate2(eventptr->rtpktptr);
-            else if (eventptr->eventity == 3)
+            }
+            else if (eventptr->eventity == 3) {
                 rtupdate3(eventptr->rtpktptr);
+            }
             else {
                 printf("Panic: unknown event entity\n");
                 exit(0);
@@ -159,7 +164,7 @@ int init() {
         printf("It is likely that random number generation on your machine\n" );
         printf("is different from what this emulator expects.  Please take\n");
         printf("a look at the routine jimsrand() in the emulator code. Sorry. \n");
-        exit();
+        exit(1);
     }
 
     clocktime = 0.0;  /* initialize time to 0.0 */
@@ -202,7 +207,7 @@ float jimsrand() {
 /*****************************************************/
 
 
-insertevent(struct event *p) {
+void insertevent(struct event *p) {
     struct event *q,*qold;
 
     if (TRACE>3) {
@@ -242,7 +247,7 @@ insertevent(struct event *p) {
     }
 }
 
-printevlist() {
+void printevlist() {
     struct event *q;
     printf("--------------\nEvent List Follows:\n");
     for(q = evlist; q!=NULL; q=q->next) {
@@ -254,7 +259,7 @@ printevlist() {
 
 /************************** TOLAYER2 ***************/
 
-tolayer2(struct rpkt packet) {
+void tolayer2(struct rpkt packet) {
     struct rtpkt *mypktptr;
     struct event *evptr, *q;
     float jimsrand(),lastime;
