@@ -28,7 +28,7 @@ For node 0, you will write the routines:
     initializing the distance table, and any other data structures
     needed by your node 0 routines, it should then send its
     directly-connected neighbors (in this case, 1, 2 and 3) the cost of
-    it minimum cost paths to all other network nodes. This minimum cost
+    its minimum cost paths to all other network nodes. This minimum cost
     information is sent to neighboring nodes in a *routing packet* by
     calling the routine `tolayer2()`, as described below. The format of
     the routing packet is also described below.
@@ -47,15 +47,15 @@ informs its directly connected neighbors of this change in minimum cost
 by sending them a routing packet. Recall that in the distance vector
 algorithm, only directly connected nodes will exchange routing packets.
 Thus nodes 1 and 2 will communicate with each other, but nodes 1 and 3
-will node communicate with each other.
+will not communicate with each other.
 
 As we saw in class, the distance table inside each node is the principal
 data structure used by the distance vector algorithm. You will find it
-convenient to declare the distance table as a 4-by-4 array of `int`'s,
+convenient to declare the distance table as a 4-by-4 array of `int`s,
 where entry `[i,j] `in the distance table in node 0 is node 0's
 currently computed cost to node i via direct neighbor j. If 0 is not
-directly connected to *j,* you can ignore this entry. We will use the
-convention that the integer value 999 is `infinity.''
+directly connected to *j* you can ignore this entry. We will use the
+convention that the integer value 999 is infinity.
 
 Figure Lab.4-2 provides a conceptual view of the relationship of the
 procedures inside node 0.
