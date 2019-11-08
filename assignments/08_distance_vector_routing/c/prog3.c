@@ -1,6 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "prog3.h"
+
+#include "node0.h"
+#include "node1.h"
+#include "node2.h"
+#include "node3.h"
+
 #define LINKCHANGES 1
 
 /*******************************************************************
@@ -11,27 +18,19 @@ Programming assignment 3: implementing distributed, asynchronous,
 THIS IS THE MAIN ROUTINE.  IT SHOULD NOT BE TOUCHED AT ALL BY STUDENTS!
 **********************************************************************/
 
-
-/* a rtpkt is the packet sent from one routing update process to
-   another via the call tolayer3() */
-struct rtpkt {
-    int sourceid;       /* id of sending router sending this pkt */
-    int destid;         /* id of router to which pkt being sent (must be an immediate neighbor) */
-    int mincost[4];     /* min cost to node 0 ... 3 */
-};
-
-
 int TRACE = 1;          /* for my debugging */
-int YES = 1;
-int NO = 0;
+int YES   = 1;
+int NO    = 0;
 
 
 void creatertpkt(struct rtpkt *initrtpkt, int srcid, int destid, int mincosts[]) {
     int i;
     initrtpkt->sourceid = srcid;
     initrtpkt->destid = destid;
-    for (i=0; i<4; i++)
+
+    for (i=0; i<4; i++) {
         initrtpkt->mincost[i] = mincosts[i];
+    }
 }
 
 
@@ -50,15 +49,6 @@ the emulator, you're welcome to look at the code - but again, you should
 not have to, and you defeinitely should not have to modify
 ******************************************************************/
 
-
-struct event {
-   float evtime;                /* event time */
-   int evtype;                  /* event type code */
-   int eventity;                /* entity where event occurs */
-   struct rtpkt *rtpktptr;      /* ptr to packet (if any) assoc w/ this event */
-   struct event *prev;
-   struct event *next;
-};
 
 struct event *evlist = NULL;    /* the event list */
 
@@ -142,7 +132,7 @@ int main() {
 }
 
 /* initialize the simulator */
-int init() {
+void init() {
     int i;
     float sum, avg;
     float jimsrand();
@@ -208,7 +198,7 @@ float jimsrand() {
 
 
 void insertevent(struct event *p) {
-    struct event *q,*qold;
+    struct event *q, *qold;
 
     if (TRACE>3) {
         printf("            INSERTEVENT: time is %lf\n",clocktime);
@@ -259,7 +249,7 @@ void printevlist() {
 
 /************************** TOLAYER2 ***************/
 
-void tolayer2(struct rpkt packet) {
+void tolayer2(struct rtpkt packet) {
     struct rtpkt *mypktptr;
     struct event *evptr, *q;
     float jimsrand(),lastime;
@@ -308,7 +298,7 @@ void tolayer2(struct rpkt packet) {
         mypktptr->mincost[i] = packet.mincost[i];
     }
 
-    if (TRACE>2) {
+    if (TRACE > 2) {
         printf("    TOLAYER2: source: %d, dest: %d\n              costs:",
         mypktptr->sourceid, mypktptr->destid);
         for (i=0; i<4; i++) {
@@ -336,7 +326,7 @@ void tolayer2(struct rpkt packet) {
 
     evptr->evtime =  lastime + 2.*jimsrand();
 
-    if (TRACE>2) {
+    if (TRACE > 2) {
         printf("    TOLAYER2: scheduling arrival on other side\n");
     }
 
