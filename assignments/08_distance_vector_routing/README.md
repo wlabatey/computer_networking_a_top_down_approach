@@ -140,11 +140,15 @@ To compile your routines: `gcc prog3.c node0.c node1.c node2.c node3.c`
 
 Prototype versions of these files are here:
 
-[node0.c](http://gaia.cs.umass.edu/kurose/network/node0.c),
-[node1.c](http://gaia.cs.umass.edu/kurose/network/node1.c),
-[node2.c](http://gaia.cs.umass.edu/kurose/network/node2.c),
-[node3.c](http://gaia.cs.umass.edu/kurose/network/node3.c).
-[prog3.c](http://gaia.cs.umass.edu/kurose/network/prog3.c).
+[node0.c](http://gaia.cs.umass.edu/kurose/network/node0.c)
+
+[node1.c](http://gaia.cs.umass.edu/kurose/network/node1.c)
+
+[node2.c](http://gaia.cs.umass.edu/kurose/network/node2.c)
+
+[node3.c](http://gaia.cs.umass.edu/kurose/network/node3.c)
+
+[prog3.c](http://gaia.cs.umass.edu/kurose/network/prog3.c)
 
 **This assignment can be completed on any machine supporting C. It makes
 no use of UNIX features.**
