@@ -51,10 +51,10 @@ will not communicate with each other.
 
 As we saw in class, the distance table inside each node is the principal
 data structure used by the distance vector algorithm. You will find it
-convenient to declare the distance table as a 4-by-4 array of `int`s,
+convenient to declare the distance table as a 4-by-4 array of `int`,
 where entry `[i,j] `in the distance table in node 0 is node 0's
 currently computed cost to node i via direct neighbor j. If 0 is not
-directly connected to *j* you can ignore this entry. We will use the
+directly connected to j you can ignore this entry. We will use the
 convention that the integer value 999 is infinity.
 
 Figure Lab.4-2 provides a conceptual view of the relationship of the
