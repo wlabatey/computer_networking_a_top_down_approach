@@ -32,6 +32,7 @@ For node 0, you will write the routines:
     information is sent to neighboring nodes in a *routing packet* by
     calling the routine `tolayer2()`, as described below. The format of
     the routing packet is also described below.
+
 -   `rtupdate0(struct rtpkt *rcvdpkt)`. This routine will be called when
     node 0 receives a routing packet that was sent to it by one if its
     directly connected neighbors. The parameter `*rcvdpkt` is a pointer
@@ -40,6 +41,7 @@ For node 0, you will write the routines:
 `rtupdate0()` is the "heart" of the distance vector algorithm. The
 values it receives in a routing packet from some other node *i* contain
 *i*'s current shortest path costs to all other network nodes.
+
 `rtupdate0()` uses these received values to update its own distance
 table (as specified by the distance vector algorithm). If its own
 minimum cost to another node changes as a result of the update, node 0
@@ -62,7 +64,9 @@ procedures inside node 0.
 
 Similar routines are defined for nodes 1, 2 and 3. Thus, you will write
 8 procedures in all:
-`rtinit0(), rtinit1(), rtinit2(), rtinit3(),rtupdate0(),  rtupdate1(), rtupdate2(), rtupdate3()`
+
+`rtinit0()`, `rtinit1()`, `rtinit2()`, `rtinit3()`,
+`rtupdate0()`, `rtupdate1()`, `rtupdate2()` and `rtupdate3()`
 
 ![](images/pa3fig2.gif)
 
@@ -141,13 +145,9 @@ To compile your routines: `gcc prog3.c node0.c node1.c node2.c node3.c`
 Prototype versions of these files are here:
 
 [node0.c](http://gaia.cs.umass.edu/kurose/network/node0.c)
-
 [node1.c](http://gaia.cs.umass.edu/kurose/network/node1.c)
-
 [node2.c](http://gaia.cs.umass.edu/kurose/network/node2.c)
-
 [node3.c](http://gaia.cs.umass.edu/kurose/network/node3.c)
-
 [prog3.c](http://gaia.cs.umass.edu/kurose/network/prog3.c)
 
 **This assignment can be completed on any machine supporting C. It makes
@@ -221,6 +221,7 @@ please be extra careful there.
 When we've taught this lab in our introductory networking course,
 students have posed various questions. If you are interested in looking
 at the questions we've received (and answers), check out:
-[qa.md](qa.md). The original page is available at <http://gaia.cs.umass.edu/kurose/network/programming_assignment_QA.htm>.
+[qa.md](qa.md).
 
-
+The original page is available at:
+<http://gaia.cs.umass.edu/kurose/network/programming_assignment_QA.htm>.
