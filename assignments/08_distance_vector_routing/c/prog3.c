@@ -8,7 +8,7 @@
 #include "node2.h"
 #include "node3.h"
 
-#define LINKCHANGES 1
+#define LINKCHANGES 0
 
 /*******************************************************************
  *
