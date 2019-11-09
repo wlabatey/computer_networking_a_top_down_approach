@@ -1,5 +1,5 @@
-Programming Assignment 6: Implementing an Algorithm
-===================================================
+Programming Assignment 6: Implementing a Distance Vector Routing Algorithm
+==========================================================================
 
 ### Overview
 
@@ -13,10 +13,11 @@ the network shown in Figure Lab.4-1.
 
 ### The Basic Assignment
 
-**The routines you will write** For the basic part of the assignment,
-you are to write the following routines which will "execute"
-asynchronously within the emulated environment that we have written for
-this assignment.
+**The routines you will write:**
+
+For the basic part of the assignment, you are to write the following
+routines which will "execute" asynchronously within the emulated
+environment that we have written for this assignment.
 
 For node 0, you will write the routines:
 
@@ -54,9 +55,9 @@ will not communicate with each other.
 As we saw in class, the distance table inside each node is the principal
 data structure used by the distance vector algorithm. You will find it
 convenient to declare the distance table as a 4-by-4 array of `int`,
-where entry `[i,j] `in the distance table in node 0 is node 0's
-currently computed cost to node i via direct neighbor j. If 0 is not
-directly connected to j you can ignore this entry. We will use the
+where entry `[i,j]` in the distance table in node 0 is node 0's
+currently computed cost to node `i` via direct neighbor `j`. If 0 is not
+directly connected to `j` you can ignore this entry. We will use the
 convention that the integer value 999 is infinity.
 
 Figure Lab.4-2 provides a conceptual view of the relationship of the
@@ -85,9 +86,8 @@ for you. The procedure `tolayer2()` is defined in the file
 
 ```
 extern struct rtpkt {
-    int sourceid;  /* id of node sending this pkt, 0, 1, 2, or 3 */
-    int destid;    /* id of router to which pkt being sent
-                    (must be an immediate neighbor) */
+    int sourceid;      /* id of node sending this pkt, 0, 1, 2, or 3 */
+    int destid;        /* id of router to which pkt being sent (must be an immediate neighbor) */
     int mincost[4];    /* min cost to node 0 ... 3 */
     };
 ```
@@ -96,15 +96,15 @@ Note that `tolayer2()` is passed a structure, not a pointer to a
 structure.
 
 `printdt0()` will pretty print the distance table for node 0. It is
-passed a pointer to a structure of type `distance_table.` `printdt0()`
+passed a pointer to a structure of type `distance_table`. `printdt0()`
 and the structure declaration for the node 0 distance table are declared
 in the file `node0.c.` Similar pretty-print routines are defined for
-you in the files `node1.c, node2.c node3.c.`
+you in the files `node1.c`, `node2.c` and `node3.c`.
 
 ### The Simulated Network Environment
 
-Your procedures `rtinit0(), rtinit1(), rtinit2(), rtinit3()` and
-`rtupdate0(), rtupdate1(), rtupdate2(), rtupdate3()` send routing
+Your procedures `rtinit0()`, `rtinit1()`, `rtinit2()`, `rtinit3()` and
+`rtupdate0()`, `rtupdate1()`, `rtupdate2()`, `rtupdate3()` send routing
 packets (whose format is described above) into the medium. The medium
 will deliver packets in-order, and without loss to the specified
 destination. Only directly-connected nodes can communicate. The delay
@@ -127,20 +127,20 @@ happen to their packets!
 
 ### The Basic Assignment
 
-You are to write the procedures `rtinit0(), rtinit1(), rtinit2(),  rtinit3()` and
-`rtupdate0(), rtupdate1(), rtupdate2(), rtupdate3()` which together will
+You are to write the procedures `rtinit0()`, `rtinit1()`, `rtinit2()`, `rtinit3()`
+and `rtupdate0()`, `rtupdate1()`, `rtupdate2()`, `rtupdate3()` which together will
 implement a distributed, asynchronous computation of the distance tables
 for the topology and costs shown in Figure 1.
 
 You should put your procedures for nodes 0 through 3 in files called
-node0.c, node1.c, node2.c and node3.c. You are **NOT** allowed to declare
+`node0.c`, `node1.c`, `node2.c` and `node3.c`. You are **NOT** allowed to declare
 any global variables that are visible outside of a given C file (e.g., any global
 variables you define in `node0.c.` may only be accessed inside
 `node0.c`). This is to force you to abide by the coding conventions that
 you would have to adopt is you were really running the procedures in
 four distinct nodes.
 
-To compile your routines: `gcc prog3.c node0.c node1.c node2.c node3.c`
+To compile your routines, run: `gcc prog3.c node0.c node1.c node2.c node3.c`
 
 Prototype versions of these files are here:
 
@@ -157,10 +157,10 @@ As always, most instructors would expect you to hand in a code listing,
 a design document, and sample output.
 
 For your sample output, your procedures should print out a message
-whenever your `rtinit0(), rtinit1(), rtinit2(), rtinit3()` or
-`rtupdate0(),  rtupdate1(), rtupdate2(), rtupdate3()` procedures are
+whenever your `rtinit0()`, `rtinit1()`, `rtinit2()`, `rtinit3()` or
+`rtupdate0()`, `rtupdate1()`, `rtupdate2()`, `rtupdate3()` procedures are
 called, giving the time (available via my global variable `clocktime`).
-For `rtupdate0(),  rtupdate1(), rtupdate2(), rtupdate3()` you should
+For `rtupdate0()`,  `rtupdate1()`, `rtupdate2()`, `rtupdate3()` you should
 print the identity of the sender of the routing packet that is being
 passed to your routine, whether or not the distance table is updated,
 the contents of the distance table (you can use my pretty-print
@@ -196,25 +196,25 @@ undergraduate assignment and then extend your code to implement the
 graduate assignment. It will **not** be time wasted. (Believe me, I
 learned this the hard way!)
 
-### JAVA Version Of This Assignment
+### Java Version Of This Assignment
 
 The documentation above describes the project in detail. Here we
-provide a link to the code needed to do the assignment in JAVA. Make
+provide a link to the code needed to do the assignment in Java. Make
 sure you understand the material above.
 
-The JAVA code you'll need can be found here:
+The Java code you'll need can be found here:
 <http://gaia.cs.umass.edu/cs453_fall_2010/hw_pa_labs/distance_vector_java_code>.
 
-You'll the write the constructors of Entity0.java, Entity1.java,
+You'll write the constructors of Entity0.java, Entity1.java,
 Entity2.java, and Entity3.java which are analogous to rtinit0(),
 rtinit1(), rtinit2() and rtinit3() in the C version. You will also need
 to write the update() methods for Entity0.java, Entity1.java,
-Entity2.java, andEntity3.java which are analogous to rtupdate0(),
-rtupdate1(), riupdate2() and rtupdate3() in the C version.
+Entity2.java, and Entity3.java which are analogous to rtupdate0(),
+rtupdate1(), rtupdate2() and rtupdate3() in the C version.
 
 Note that the Java code will allow you to hang yourself by sending
-incorrect packets via the toLayer2()method of NetworkSimulator. So
-please be extra careful there.
+incorrect packets via the toLayer2() method of NetworkSimulator, so
+please be extra careful there!
 
 ### Q&A
 
