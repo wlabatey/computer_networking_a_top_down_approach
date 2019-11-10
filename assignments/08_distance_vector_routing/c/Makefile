@@ -5,16 +5,16 @@ CFLAGS = -Werror -Wextra -Wall -pedantic -ggdb
 
 .PHONY: clean cleanall
 
-node0.o: node0.h node0.c
+node0.o: node0.c node0.h
 	$(CC) $(CFLAGS) -c node0.c
 
-node1.o: node1.h node1.c
+node1.o: node1.c node1.h
 	$(CC) $(CFLAGS) -c node1.c
 
-node2.o: node2.h node2.h
+node2.o: node2.c node2.h
 	$(CC) $(CFLAGS) -c node2.c
 
-node3.o: node3.h node3.c
+node3.o: node3.c node3.h
 	$(CC) $(CFLAGS) -c node3.c
 
 prog3.o: prog3.c prog3.h
