@@ -138,7 +138,7 @@ void init() {
     float jimsrand();
     struct event *evptr;
 
-    printf("Enter TRACE:");
+    printf("Enter TRACE: ");
     scanf("%d",&TRACE);
 
     srand(9999);               /* init random number generator */

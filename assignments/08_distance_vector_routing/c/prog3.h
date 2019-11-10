@@ -16,6 +16,10 @@ struct event {
    struct event *next;
 };
 
+struct distance_table {
+    int costs[4][4];
+};
+
 void creatertpkt(struct rtpkt *initrtpkt, int srcid, int destid, int mincosts[]);
 
 void insertevent(struct event *evptr);
