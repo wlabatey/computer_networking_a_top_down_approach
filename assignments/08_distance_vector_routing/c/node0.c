@@ -1,8 +1,10 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "prog3.h"
 #include "node0.h"
 
+#define NODE_ID 0
 
 int connectcosts0[4] = { 0, 1, 3, 7 };
 
@@ -15,8 +17,30 @@ void rtinit0() {
     // Steps to take:
     // - Update distance table
     // - Send distance table to all directly connected neighbours
+    //
+    //
+
+    // Initialize distance table
     for (int i = 0; i < 4; i++) {
         dt0.costs[i][i] = connectcosts0[i];
+    }
+
+    struct rtpkt cost_pkt;
+    cost_pkt.sourceid = NODE_ID;
+    cost_pkt.destid = 0;
+    memcpy(&cost_pkt.mincost, connectcosts0, 4 * sizeof(int));
+
+    struct rtpkt *cost_pkt_ptr = &cost_pkt;
+
+    // ignore self (link cost 0) and non directly connected nodes (999)
+    // send direct neighbours our link costs
+    for (int i = 0; i < 4; i++) {
+        if (connectcosts0[i] != 0 && connectcosts0[i] != 999) {
+            cost_pkt_ptr->destid = i;
+            printf("cost_pkt.sourceid: %i\n", cost_pkt.sourceid);
+            printf("cost_pkt.destid: %i\n", cost_pkt.destid);
+            tolayer2(cost_pkt);
+        }
     }
 
     printdt0(&dt0);
@@ -26,7 +50,10 @@ void rtinit0() {
 void rtupdate0(struct rtpkt *rcvdpkt) {
     printf("rtupdate0 srcid: %i\n", rcvdpkt->sourceid);
     printf("rtupdate0 destid: %i\n", rcvdpkt->destid);
-    printf("rtupdate0 mincost[0]: %i\n", rcvdpkt->mincost[0]);
+
+    for (int i = 0; i < 4; i++) {
+        printf("rtupdate0 mincost[%i]: %i\n", i, rcvdpkt->mincost[i]);
+    }
 
     // Steps to take:
     // - Update distance table based on distance vector information from neighbours
