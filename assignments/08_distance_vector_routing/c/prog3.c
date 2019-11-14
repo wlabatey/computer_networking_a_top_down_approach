@@ -46,7 +46,7 @@ THERE IS NOT REASON THAT ANY STUDENT SHOULD HAVE TO READ OR UNDERSTAND
 THE CODE BELOW.  YOU SHOLD NOT TOUCH, OR REFERENCE (in your code) ANY
 OF THE DATA STRUCTURES BELOW.  If you're interested in how I designed
 the emulator, you're welcome to look at the code - but again, you should
-not have to, and you defeinitely should not have to modify
+not have to, and you definitely should not have to modify it.
 ******************************************************************/
 
 
@@ -128,7 +128,7 @@ int main() {
         }
 
         free(eventptr);                      /* free memory for event struct   */
-        }
+    }
 }
 
 /* initialize the simulator */
@@ -139,7 +139,7 @@ void init() {
     struct event *evptr;
 
     printf("Enter TRACE: ");
-    scanf("%d",&TRACE);
+    scanf("%d", &TRACE);
 
     srand(9999);               /* init random number generator */
     sum = 0.0;                 /* test random number generator for students */
@@ -162,6 +162,9 @@ void init() {
     rtinit1();
     rtinit2();
     rtinit3();
+
+    // TODO: Remove this when finished debugging
+    printevlist();
 
     /* initialize future link changes */
     if (LINKCHANGES == 1) {
@@ -215,24 +218,24 @@ void insertevent(struct event *p) {
     else {
         for (qold = q; q !=NULL && p->evtime > q->evtime; q=q->next) {
             qold=q;
+        }
 
-            if (q==NULL) {   /* end of list */
-                qold->next = p;
-                p->prev = qold;
-                p->next = NULL;
-            }
-            else if (q==evlist) { /* front of list */
-                p->next=evlist;
-                p->prev=NULL;
-                p->next->prev=p;
-                evlist = p;
-            }
-            else {     /* middle of list */
-                p->next=q;
-                p->prev=q->prev;
-                q->prev->next=p;
-                q->prev=p;
-            }
+        if (q==NULL) {          /* end of list */
+            qold->next = p;
+            p->prev = qold;
+            p->next = NULL;
+        }
+        else if (q==evlist) {   /* front of list */
+            p->next=evlist;
+            p->prev=NULL;
+            p->next->prev=p;
+            evlist = p;
+        }
+        else {                  /* middle of list */
+            p->next=q;
+            p->prev=q->prev;
+            q->prev->next=p;
+            q->prev=p;
         }
     }
 }
@@ -324,7 +327,7 @@ void tolayer2(struct rtpkt packet) {
         lastime = q->evtime;
     }
 
-    evptr->evtime =  lastime + 2.*jimsrand();
+    evptr->evtime = lastime + 2.*jimsrand();
 
     if (TRACE > 2) {
         printf("    TOLAYER2: scheduling arrival on other side\n");
