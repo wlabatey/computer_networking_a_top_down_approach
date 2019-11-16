@@ -18,7 +18,7 @@ Programming assignment 3: implementing distributed, asynchronous,
 THIS IS THE MAIN ROUTINE.  IT SHOULD NOT BE TOUCHED AT ALL BY STUDENTS!
 **********************************************************************/
 
-int TRACE = 1;          /* for my debugging */
+int TRACE = 0;          /* for my debugging */
 int YES   = 1;
 int NO    = 0;
 
@@ -163,9 +163,6 @@ void init() {
     rtinit2();
     rtinit3();
 
-    // TODO: Remove this when finished debugging
-    printevlist();
-
     /* initialize future link changes */
     if (LINKCHANGES == 1) {
         evptr = (struct event *) malloc(sizeof(struct event));
@@ -203,7 +200,7 @@ float jimsrand() {
 void insertevent(struct event *p) {
     struct event *q, *qold;
 
-    if (TRACE>3) {
+    if (TRACE > 3) {
         printf("            INSERTEVENT: time is %lf\n",clocktime);
         printf("            INSERTEVENT: future time will be %lf\n",p->evtime);
     }

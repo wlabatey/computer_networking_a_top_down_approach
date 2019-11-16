@@ -7,10 +7,10 @@ struct rtpkt {
 };
 
 struct event {
-    float evtime;                /* event time */
-    int evtype;                  /* event type code */
-    int eventity;                /* entity where event occurs */
-    struct rtpkt *rtpktptr;      /* ptr to packet (if any) assoc w/ this event */
+    float evtime;            /* event time */
+    int evtype;              /* event type code */
+    int eventity;            /* entity where event occurs */
+    struct rtpkt *rtpktptr;  /* ptr to packet (if any) assoc w/ this event */
     struct event *prev;
     struct event *next;
 };
@@ -31,6 +31,6 @@ void tolayer2(struct rtpkt packet);
 
 void init();
 
-extern int TRACE;          /* for my debugging */
+extern int TRACE;  /* for my debugging */
 extern int YES;
 extern int NO;
