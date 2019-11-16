@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "prog3.h"
 #include "node3.h"
@@ -31,8 +32,6 @@ void rtinit3() {
     for (int i = 0; i < 4; i++) {
         if (connectcosts3[i] != 0 && connectcosts3[i] != 999) {
             cost_pkt_ptr->destid = i;
-            printf("cost_pkt.sourceid: %i\n", cost_pkt.sourceid);
-            printf("cost_pkt.destid: %i\n", cost_pkt.destid);
             tolayer2(cost_pkt);
         }
     }
@@ -42,11 +41,58 @@ void rtinit3() {
 
 
 void rtupdate3(struct rtpkt *rcvdpkt) {
+    printf("----------\n");
     printf("rtupdate3 srcid: %i\n", rcvdpkt->sourceid);
     printf("rtupdate3 destid: %i\n", rcvdpkt->destid);
+    printf("rtupdate3 mincosts: ");
+    for (int i = 0; i < 4; i++) {
+        printf("%i ", rcvdpkt->mincost[i]);
+    }
+    printf("\n");
+
+    // Steps to take:
+    // - Check srcid (use as index for 2d distance table)
+    // - Iterate through mincosts array (index is destination node)
+    // - If connectcosts3[sourceid] + rcvdpkt->mincosts[i] < connectcosts3[sourceid] + dt3.costs[sourceid][i] then update dt3.costs[sourceid][i]
+    // - If update made in last step, then resend dt3 to directly connected nodes
+
+    bool table_updated = false;
+
+    printf("----------\n");
 
     for (int i = 0; i < 4; i++) {
-        printf("rtupdate3 mincost[%i]: %i\n", i, rcvdpkt->mincost[i]);
+        // Don't update the distance table with another node's link cost to itself (which will always be 0)
+        if (i == rcvdpkt->sourceid) {
+            printf("i %i matches sourceid %i. Skipping.\n", i, rcvdpkt->sourceid);
+            continue;
+        }
+
+        // Don't update the distance table with another node's link cost back to the current node (which we already have from mincosts[])
+        if (i == NODE_ID) {
+            printf("i %i matches NODE_ID %i. Skipping.\n", i, NODE_ID);
+            continue;
+        }
+
+        // Ignore link costs of 999, which mean a node has not yet established a path to another node.
+        if (rcvdpkt->mincost[i] == 999) {
+            printf("node %i has not yet established a path to node %i. Skipping.\n", rcvdpkt->sourceid, i);
+            continue;
+        }
+
+        printf("dt3.costs[i][srcid]: %i\n", dt3.costs[i][rcvdpkt->sourceid]);
+        printf("connectcosts3[srcid]: %i\n", connectcosts3[rcvdpkt->sourceid]);
+        printf("connectcosts3[srcid] + rcvdpkt->mincost[i]: %i\n", connectcosts3[rcvdpkt->sourceid] + rcvdpkt->mincost[i]);
+        if (dt3.costs[i][rcvdpkt->sourceid] == 0 || (connectcosts3[rcvdpkt->sourceid] + rcvdpkt->mincost[i]) < dt3.costs[i][rcvdpkt->sourceid]) {
+            dt3.costs[i][rcvdpkt->sourceid] = connectcosts3[rcvdpkt->sourceid] + rcvdpkt->mincost[i];
+            table_updated = true;
+        }
+    }
+
+    printf("----------\n");
+
+    if (table_updated == true) {
+        printf("dt3 was updated. New table below.\n\n");
+        printdt3(&dt3);
     }
 }
 
