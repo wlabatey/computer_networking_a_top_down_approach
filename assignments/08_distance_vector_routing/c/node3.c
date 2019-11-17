@@ -7,17 +7,29 @@
 
 #define NODE_ID 3
 
-int connectcosts3[4] = { 7,  999,  2, 0 };
+
+// Link costs to directly connected neighbours used for initializing the distance table.
+int connectcosts3[4] = { 7, 999, 2, 0 };
+
+// Minimum costs to all nodes, initially set to same as connectcosts
+int mincosts3[4] = { 7, 999, 2, 0 };
 
 struct distance_table dt3;
 
 
 /* students to write the following two routines, and maybe some others */
-
-
 void rtinit3() {
+
+    // Initialize distance table
     for (int i = 0; i < 4; i++) {
-        dt3.costs[i][i] = connectcosts3[i];
+        for (int j = 0; j < 4; j++) {
+            if (i == j) {
+                dt3.costs[i][j] = connectcosts3[i];
+            }
+            else {
+                dt3.costs[i][j] = 0;
+            }
+        }
     }
 
     struct rtpkt cost_pkt;
@@ -93,6 +105,44 @@ void rtupdate3(struct rtpkt *rcvdpkt) {
     if (table_updated == true) {
         printf("dt3 was updated. New table below.\n\n");
         printdt3(&dt3);
+
+        // TODO: Send out updated distance tables to directly connected nodes.
+        // Steps:
+        // - For each destination dt3.costs[i] (except self), find minimum value in dt3.costs[i][j]
+        // - Send minimum costs to each neighbouring node (connectcosts0[i] if not 999)
+        //
+
+
+        for (int i = 0; i < 4; i++) {
+            // Ignore link cost to ourself
+            if (i == NODE_ID) {
+                continue;
+            }
+
+            for (int j = 0; j < 4; j++) {
+                // Ignore routes to another node via ourself, which we already have from connectcosts[]
+                if (j == NODE_ID) {
+                    continue;
+                }
+
+                // Ignore uninitialized link costs
+                if (dt3.costs[i][j] == 0) {
+                    continue;
+                }
+
+                // Update mincost[i] with lowest cost for node i from each of the options of dt3.costs[i][j]
+                if (dt3.costs[i][j] < mincosts3[i]) {
+                    mincosts3[i] = dt3.costs[i][j];
+                }
+            }
+        }
+
+
+        printf("dt3update mincosts: ");
+        for (int i = 0; i < 4; i++) {
+            printf("%i ", mincosts3[i]);
+        }
+        printf("\n");
     }
 }
 

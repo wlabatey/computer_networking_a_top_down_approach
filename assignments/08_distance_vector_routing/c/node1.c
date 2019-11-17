@@ -7,17 +7,27 @@
 
 #define NODE_ID 1
 
-int connectcosts1[4] = { 1,  0,  1, 999 };
+
+// Link costs to directly connected neighbours used for initializing the distance table.
+int connectcosts1[4] = { 1, 0, 1, 999 };
+
+// Minimum costs to all nodes, initially set to same as connectcosts
+int mincosts1[4] = { 1, 0, 1, 999 };
 
 struct distance_table dt1;
 
 
 /* students to write the following two routines, and maybe some others */
-
-
 void rtinit1() {
     for (int i = 0; i < 4; i++) {
-        dt1.costs[i][i] = connectcosts1[i];
+        for (int j = 0; j < 4; j++) {
+            if (i == j) {
+                dt1.costs[i][j] = connectcosts1[i];
+            }
+            else {
+                dt1.costs[i][j] = 0;
+            }
+        }
     }
 
     struct rtpkt cost_pkt;
@@ -93,6 +103,42 @@ void rtupdate1(struct rtpkt *rcvdpkt) {
     if (table_updated == true) {
         printf("dt1 was updated. New table below.\n\n");
         printdt1(&dt1);
+
+        // TODO: Send out updated distance tables to directly connected nodes.
+        // Steps:
+        // - For each destination dt1.costs[i] (except self), find minimum value in dt1.costs[i][j]
+        // - Send minimum costs to each neighbouring node (connectcosts0[i] if not 999)
+
+
+        for (int i = 0; i < 4; i++) {
+            // Ignore link cost to ourself
+            if (i == NODE_ID) {
+                continue;
+            }
+
+            for (int j = 0; j < 4; j++) {
+                // Ignore routes to another node via ourself, which we already have from connectcosts[]
+                if (j == NODE_ID) {
+                    continue;
+                }
+
+                // Ignore uninitialized link costs
+                if (dt1.costs[i][j] == 0) {
+                    continue;
+                }
+
+                // Update mincost[i] with lowest cost for node i from each of the options of dt1.costs[i][j]
+                if (dt1.costs[i][j] < mincosts1[i]) {
+                    mincosts1[i] = dt1.costs[i][j];
+                }
+            }
+        }
+
+        printf("dt1update mincosts1: ");
+        for (int i = 0; i < 4; i++) {
+            printf("%i ", mincosts1[i]);
+        }
+        printf("\n");
     }
 }
 

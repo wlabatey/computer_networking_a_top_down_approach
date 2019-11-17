@@ -7,7 +7,12 @@
 
 #define NODE_ID 0
 
+
+// Link costs to directly connected neighbours used for initializing the distance table.
 int connectcosts0[4] = { 0, 1, 3, 7 };
+
+// Minimum costs to all nodes, initially set to same as connectcosts
+int mincosts0[4] = { 0, 1, 3, 7 };
 
 struct distance_table dt0;
 
@@ -23,7 +28,14 @@ void rtinit0() {
 
     // Initialize distance table
     for (int i = 0; i < 4; i++) {
-        dt0.costs[i][i] = connectcosts0[i];
+        for (int j = 0; j < 4; j++) {
+            if (i == j) {
+                dt0.costs[i][j] = connectcosts0[i];
+            }
+            else {
+                dt0.costs[i][j] = 0;
+            }
+        }
     }
 
     struct rtpkt cost_pkt;
@@ -101,6 +113,40 @@ void rtupdate0(struct rtpkt *rcvdpkt) {
         printdt0(&dt0);
 
         // TODO: Send out updated distance tables to directly connected nodes.
+        // Steps:
+        // - For each destination dt0.costs[i] (except self), find minimum value in dt0.costs[i][j]
+        // - Send minimum costs to each neighbouring node (connectcosts0[i] if not 999)
+
+
+        for (int i = 0; i < 4; i++) {
+            // Ignore link cost to ourself
+            if (i == NODE_ID) {
+                continue;
+            }
+
+            for (int j = 0; j < 4; j++) {
+                // Ignore routes to another node via ourself, which we already have from connectcosts[]
+                if (j == NODE_ID) {
+                    continue;
+                }
+
+                // Ignore uninitialized link costs
+                if (dt0.costs[i][j] == 0) {
+                    continue;
+                }
+
+                // Update mincost[i] with lowest cost for node i from each of the options of dt0.costs[i][j]
+                if (dt0.costs[i][j] < mincosts0[i]) {
+                    mincosts0[i] = dt0.costs[i][j];
+                }
+            }
+        }
+
+        printf("dt0update mincosts0: ");
+        for (int i = 0; i < 4; i++) {
+            printf("%i ", mincosts0[i]);
+        }
+        printf("\n");
     }
 }
 
