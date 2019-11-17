@@ -175,8 +175,8 @@ network, at which point our emulator will terminate.
 ### The Advanced Assignment
 
 You are to write two procedures,
-`rtlinkhandler0(int linkid, int  newcost)` and
-`rtlinkhandler1(int linkid, int newcost)`, which will be called if (and
+`linkhandler0(int linkid, int  newcost)` and
+`linkhandler1(int linkid, int newcost)`, which will be called if (and
 when) the cost of the link between 0 and 1 changes. These routines
 should be defined in the files `node0.c` and `node1.c,` respectively.
 The routines will be passed the name (id) of the neighboring node on the
