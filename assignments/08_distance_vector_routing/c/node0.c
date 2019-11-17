@@ -158,6 +158,8 @@ void printdt0(struct distance_table *dtptr) {
 }
 
 
+// TODO: Set LINKCHANGES to 1 in prog.c, and implement linkhandler0 in node0 and linkhandler1 in node1.
+
 /* called when cost from 0 to linkid changes from current value to newcost*/
 /* You can leave this routine empty if you're an undergrad. If you want */
 /* to use this routine, you'll need to change the value of the LINKCHANGE */
