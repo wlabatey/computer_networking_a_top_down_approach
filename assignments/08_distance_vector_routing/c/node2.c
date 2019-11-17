@@ -17,9 +17,27 @@ int mincosts2[4] = { 3, 1, 0, 2 };
 struct distance_table dt2;
 
 
+void sendcosts2() {
+    struct rtpkt cost_pkt;
+    cost_pkt.sourceid = NODE_ID;
+    cost_pkt.destid = 0;
+    memcpy(&cost_pkt.mincost, mincosts2, 4 * sizeof(int));
+
+    struct rtpkt *cost_pkt_ptr = &cost_pkt;
+
+    for (int i = 0; i < 4; i++) {
+        // ignore self and non directly connected nodes (999)
+        if (i == NODE_ID || connectcosts2[i] == 999) {
+            continue;
+        }
+
+        cost_pkt_ptr->destid = i;
+        tolayer2(cost_pkt);
+    }
+}
+
 /* students to write the following two routines, and maybe some others */
 void rtinit2() {
-
     // Initialize distance table
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
@@ -32,22 +50,7 @@ void rtinit2() {
         }
     }
 
-    struct rtpkt cost_pkt;
-    cost_pkt.sourceid = NODE_ID;
-    cost_pkt.destid = 0;
-    memcpy(&cost_pkt.mincost, connectcosts2, 4 * sizeof(int));
-
-    struct rtpkt *cost_pkt_ptr = &cost_pkt;
-
-    // ignore self (link cost 0) and non directly connected nodes (999)
-    // send direct neighbours our link costs
-    for (int i = 0; i < 4; i++) {
-        if (connectcosts2[i] != 0 && connectcosts2[i] != 999) {
-            cost_pkt_ptr->destid = i;
-            tolayer2(cost_pkt);
-        }
-    }
-
+    sendcosts2();
     printdt2(&dt2);
 }
 
@@ -106,12 +109,7 @@ void rtupdate2(struct rtpkt *rcvdpkt) {
         printf("dt2 was updated. New table below.\n\n");
         printdt2(&dt2);
 
-        // TODO: Send out updated distance tables to directly connected nodes.
-        // Steps:
-        // - For each destination dt2.costs[i] (except self), find minimum value in dt2.costs[i][j]
-        // - Send minimum costs to each neighbouring node (connectcosts0[i] if not 999)
-
-
+        // Update mincosts if distance table was updated.
         for (int i = 0; i < 4; i++) {
             // Ignore link cost to ourself
             if (i == NODE_ID) {
@@ -141,6 +139,9 @@ void rtupdate2(struct rtpkt *rcvdpkt) {
             printf("%i ", mincosts2[i]);
         }
         printf("\n");
+
+        printf("dt2update sending out new min costs.\n");
+        sendcosts2();
     }
 }
 

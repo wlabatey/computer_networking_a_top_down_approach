@@ -17,6 +17,25 @@ int mincosts3[4] = { 7, 999, 2, 0 };
 struct distance_table dt3;
 
 
+void sendcosts3() {
+    struct rtpkt cost_pkt;
+    cost_pkt.sourceid = NODE_ID;
+    cost_pkt.destid = 0;
+    memcpy(&cost_pkt.mincost, mincosts3, 4 * sizeof(int));
+
+    struct rtpkt *cost_pkt_ptr = &cost_pkt;
+
+    for (int i = 0; i < 4; i++) {
+        // ignore self and non directly connected nodes (999)
+        if (i == NODE_ID || connectcosts3[i] == 999) {
+            continue;
+        }
+
+        cost_pkt_ptr->destid = i;
+        tolayer2(cost_pkt);
+    }
+}
+
 /* students to write the following two routines, and maybe some others */
 void rtinit3() {
 
@@ -32,22 +51,7 @@ void rtinit3() {
         }
     }
 
-    struct rtpkt cost_pkt;
-    cost_pkt.sourceid = NODE_ID;
-    cost_pkt.destid = 0;
-    memcpy(&cost_pkt.mincost, connectcosts3, 4 * sizeof(int));
-
-    struct rtpkt *cost_pkt_ptr = &cost_pkt;
-
-    // ignore self (link cost 0) and non directly connected nodes (999)
-    // send direct neighbours our link costs
-    for (int i = 0; i < 4; i++) {
-        if (connectcosts3[i] != 0 && connectcosts3[i] != 999) {
-            cost_pkt_ptr->destid = i;
-            tolayer2(cost_pkt);
-        }
-    }
-
+    sendcosts3();
     printdt3(&dt3);
 }
 
@@ -106,13 +110,7 @@ void rtupdate3(struct rtpkt *rcvdpkt) {
         printf("dt3 was updated. New table below.\n\n");
         printdt3(&dt3);
 
-        // TODO: Send out updated distance tables to directly connected nodes.
-        // Steps:
-        // - For each destination dt3.costs[i] (except self), find minimum value in dt3.costs[i][j]
-        // - Send minimum costs to each neighbouring node (connectcosts0[i] if not 999)
-        //
-
-
+        // Update mincosts if distance table was updated.
         for (int i = 0; i < 4; i++) {
             // Ignore link cost to ourself
             if (i == NODE_ID) {
@@ -137,12 +135,14 @@ void rtupdate3(struct rtpkt *rcvdpkt) {
             }
         }
 
-
         printf("dt3update mincosts: ");
         for (int i = 0; i < 4; i++) {
             printf("%i ", mincosts3[i]);
         }
         printf("\n");
+
+        printf("dt3update sending out new min costs.\n");
+        sendcosts3();
     }
 }
 
