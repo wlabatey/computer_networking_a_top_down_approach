@@ -16,6 +16,32 @@ int mincosts0[4] = { 0, 1, 3, 7 };
 
 struct distance_table dt0;
 
+void findmincosts0() {
+    // Update mincosts if distance table was updated.
+    for (int i = 0; i < 4; i++) {
+        // Ignore link cost to ourself
+        if (i == NODE_ID) {
+            continue;
+        }
+
+        for (int j = 0; j < 4; j++) {
+            // Ignore routes to another node via ourself, which we already have from connectcosts[]
+            if (j == NODE_ID) {
+                continue;
+            }
+
+            // Ignore uninitialized link costs
+            if (dt0.costs[i][j] == 0) {
+                continue;
+            }
+
+            // Update mincost[i] with lowest cost for node i from each of the options of dt0.costs[i][j]
+            if (dt0.costs[i][j] < mincosts0[i]) {
+                mincosts0[i] = dt0.costs[i][j];
+            }
+        }
+    }
+}
 
 void sendcosts0() {
     struct rtpkt cost_pkt;
@@ -109,30 +135,7 @@ void rtupdate0(struct rtpkt *rcvdpkt) {
         printf("dt0 was updated. New table below.\n\n");
         printdt0(&dt0);
 
-        // Update mincosts if distance table was updated.
-        for (int i = 0; i < 4; i++) {
-            // Ignore link cost to ourself
-            if (i == NODE_ID) {
-                continue;
-            }
-
-            for (int j = 0; j < 4; j++) {
-                // Ignore routes to another node via ourself, which we already have from connectcosts[]
-                if (j == NODE_ID) {
-                    continue;
-                }
-
-                // Ignore uninitialized link costs
-                if (dt0.costs[i][j] == 0) {
-                    continue;
-                }
-
-                // Update mincost[i] with lowest cost for node i from each of the options of dt0.costs[i][j]
-                if (dt0.costs[i][j] < mincosts0[i]) {
-                    mincosts0[i] = dt0.costs[i][j];
-                }
-            }
-        }
+        findmincosts0();
 
         printf("dt0update mincosts0: ");
         for (int i = 0; i < 4; i++) {
@@ -158,7 +161,6 @@ void printdt0(struct distance_table *dtptr) {
 }
 
 
-// TODO: Set LINKCHANGES to 1 in prog.c, and implement linkhandler0 in node0 and linkhandler1 in node1.
 
 /* called when cost from 0 to linkid changes from current value to newcost*/
 /* You can leave this routine empty if you're an undergrad. If you want */
@@ -167,4 +169,45 @@ void printdt0(struct distance_table *dtptr) {
 void linkhandler0(int linkid, int newcost) {
     printf("linkhandler0 linkid: %i\n", linkid);
     printf("linkhandler0 newcost: %i\n", newcost);
+
+    // Reset all costs via linkid to 0.
+    // Update the distance table with new cost
+    dt0.costs[linkid][linkid] = newcost;
+
+    for (int i = 0; i < 4; i ++) {
+        // Direct route already updated, so skip it here.
+        if (i == linkid) {
+            continue;
+        }
+
+        // Reset all link costs via linkid
+        dt0.costs[i][linkid] = 0;
+    }
+
+    // Update connectcosts0 with new cost 
+    connectcosts0[linkid] = newcost;
+
+    // Reset mincosts to connectcosts and then find new lowest cost path
+    for (int i = 0; i < 4; i++) {
+        mincosts0[i] = connectcosts0[i];
+    }
+
+    findmincosts0();
+
+    printf("linkhandler0 new link costs: ");
+    for (int i = 0; i < 4; i++) {
+        printf("%i ", connectcosts0[i]);
+    }
+    printf("\n");
+
+    printf("linkhandler0 new min costs: ");
+    for (int i = 0; i < 4; i++) {
+        printf("%i ", mincosts0[i]);
+    }
+    printf("\n");
+
+    printf("linkhandler0 dt0 was updated. New table below.\n\n");
+    printdt0(&dt0);
+
+    sendcosts0();
 }
