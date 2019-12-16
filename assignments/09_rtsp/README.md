@@ -1,7 +1,5 @@
-Programming Assignment 7: Streaming Video with RTSP and RTP
-===========================================================
+# Programming Assignment 7: Streaming Video with RTSP and RTP
 
-The Code
 --------
 
 In this lab you will implement a streaming video server and client that
@@ -33,7 +31,7 @@ There are 4 classes in the assignment.
 [RTPpacket](RTPpacket.md):
     This class is used to handle the RTP packets. It has separate
     routines for handling the received packets at the client side which
-    is given and you do not need to modify it (but see [Optional Exercises](#optional)).
+    is given and you do not need to modify it (but see [Optional Exercises](#optional-exercises)).
     *You will need to complete the first constructor of this class to
     implement RTP-packetization of the video data*. The second constructor is
     used by the client to de-packetize the data. You do not need to modify that.
@@ -67,7 +65,7 @@ in the [Appendix](#appendix).
 The client opens a connection to the server and pops up a window like
 this:
 
-![](img/screenshot.jpg){width="390" height="370"}
+![](img/screenshot.jpg)
 
 You can send RTSP commands to the server by pressing the buttons. A
 normal RTSP interaction goes as follows.
@@ -86,8 +84,7 @@ other reply codes. For more information about RTSP, please see RFC 2326.
 
 ------------------------------------------------------------------------
 
-1. Client
----------
+### 1. Client
 
 Your first task is to implement the RTSP on the client side. To do this,
 you need to complete the functions that are called when the user clicks
@@ -113,21 +110,21 @@ this socket for sending all RTSP requests.
 -   Send PLAY request. You must insert the Session header and use the
     session ID returned in the SETUP response. You must not put the
     Transport header in this request.
--   Read server\'s response.
+-   Read server's response.
 
 ### PAUSE
 
 -   Send PAUSE request. You must insert the Session header and use the
     session ID returned in the SETUP response. You must not put the
     Transport header in this request.
--   Read server\'s response.
+-   Read server's response.
 
 ### TEARDOWN
 
 -   Send TEARDOWN request. You must insert the Session header and use
     the session ID returned in the SETUP response. You must not put the
     Transport header in this request.
--   Read server\'s response.
+-   Read server's response.
 
 **Note:** *You must insert the CSeq header in every request you send*.
 The value of the CSeq header is a number which is incremented by one for
@@ -136,7 +133,7 @@ each request you send.
 ### Example
 
 Here is a sample interaction between the client and server. The
-client\'s requestes are marked with C: and server\'s replies with S:. In
+client's requestes are marked with C: and server's replies with S:. In
 this lab both the client and the server are **very simple**. They do not
 have sophisticated parsing routines and they *expect the header fields
 to be in the order you see below*. That is, in a request, the first
@@ -187,16 +184,15 @@ and Session is the second.
 ### Client State
 
 One of the key differences between HTTP and RTSP is that in RTSP each
-session has a state. In this lab you will need to keep the client\'s
+session has a state. In this lab you will need to keep the client's
 state up-to-date. Client changes state when it receives a reply from the
 server according to the following state diagram.
 
-![](VideoStreaming_files/state.gif){width="660" height="237"}
+![](img/state.gif)
 
 ------------------------------------------------------------------------
 
-2. Server
----------
+### 2. Server
 
 On the server you will need to implement the packetization of the video
 data into RTP packets. For this you will need to create the packet, set
@@ -288,7 +284,7 @@ have the 8 low-order bits of `foo`.
 
 You can copy a 32-bit integer into 4 bytes in a similar way.
 
-If you\'re not comfortable setting bits, you can find more information
+If you're not comfortable setting bits, you can find more information
 in [the Java Tutorial](http://java.sun.com/docs/books/tutorial/java/nutsandbolts/bitwise.html).
 
 ### Bit Example
@@ -310,8 +306,7 @@ In binary this would be represented as
 
 ------------------------------------------------------------------------
 
-[Optional Exercises]{#optional}
--------------------------------
+### Optional Exercises
 
 -   Instead of the normal server given to you, use the class called
     `FunkyServer` (download also the class
@@ -337,7 +332,7 @@ In binary this would be represented as
     file which tells the client what kinds of streams are in the session
     and what encodings are used.
 
-[Appendix]{#appendix}
+Appendix
 ---------------------
 
 Lab's proprietary MJPEG (Motion JPEG) format.
