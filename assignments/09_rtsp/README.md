@@ -1,5 +1,11 @@
 # Programming Assignment 7: Streaming Video with RTSP and RTP
 
+### Original Assignment Link
+
+The original page for this assignment briefing and code is available [here](http://media.pearsoncmg.com/aw/aw_kurose_network_3/labs/lab7/lab7.html).
+
+-----
+
 In this lab you will implement a streaming video server and client that
 communicate using the Real-Time Streaming Protocol (RTSP) and send data
 using the Real-time Transfer Protocol (RTP). Your task is to implement
