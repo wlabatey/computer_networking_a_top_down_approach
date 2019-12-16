@@ -289,7 +289,7 @@ have the 8 low-order bits of `foo`.
 You can copy a 32-bit integer into 4 bytes in a similar way.
 
 If you're not comfortable setting bits, you can find more information
-in [the Java Tutorial](http://java.sun.com/docs/books/tutorial/java/nutsandbolts/bitwise.html).
+in [the Java Tutorial](https://docs.oracle.com/javase/tutorial/java/nutsandbolts/op3.html).
 
 ### Bit Example
 
@@ -313,9 +313,9 @@ In binary this would be represented as
 ### Optional Exercises
 
 -   Instead of the normal server given to you, use the class called
-    `FunkyServer` (download also the class
-    [FunkyServer\$1.class](FunkyServer$1.class)), i.e., run it with
-    `java FunkyServer server_port`. What do you see at the client?
+    [FunkyServer](http://media.pearsoncmg.com/aw/aw_kurose_network_3/labs/lab7/FunkyServer.class) (download also the class
+    [FunkyServer\$1.class](http://media.pearsoncmg.com/aw/aw_kurose_network_3/labs/lab7/FunkyServer$1.class)),
+    i.e., run it with `java FunkyServer server_port`. What do you see at the client?
     Explain what happens, why, and fix it.
 -   Calculate statistics about the session. You will need to calculate
     RTP packet loss rate, video data rate (in bits or bytes per second),
