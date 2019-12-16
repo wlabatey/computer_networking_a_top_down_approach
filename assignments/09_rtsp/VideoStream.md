@@ -1,5 +1,6 @@
 # VideoStream.java
 
+```
     //VideoStream
 
     import java.io.*;
@@ -39,3 +40,4 @@
         return(fis.read(frame,0,length));
       }
     }
+```
