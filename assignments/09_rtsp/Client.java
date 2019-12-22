@@ -24,7 +24,6 @@ public class Client {
     JLabel iconLabel = new JLabel();
     ImageIcon icon;
 
-
     // RTP variables
     DatagramPacket rcvdp;                       // UDP packet received from the server
     DatagramSocket RTPsocket;                   // Socket to be used to send and receive UDP packets
@@ -122,8 +121,8 @@ public class Client {
         theClient.RTSPsocket = new Socket(ServerIPAddr, RTSP_server_port);
 
         // Set input and output stream filters:
-        RTSPBufferedReader = new BufferedReader(new InputStreamReader(theClient.RTSPsocket.getInputStream()) );
-        RTSPBufferedWriter = new BufferedWriter(new OutputStreamWriter(theClient.RTSPsocket.getOutputStream()) );
+        RTSPBufferedReader = new BufferedReader(new InputStreamReader(theClient.RTSPsocket.getInputStream()));
+        RTSPBufferedWriter = new BufferedWriter(new OutputStreamWriter(theClient.RTSPsocket.getOutputStream()));
 
         // Init RTSP state:
         state = INIT;
