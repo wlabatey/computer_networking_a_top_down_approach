@@ -3,11 +3,10 @@
     <property name="src.dir"            value="src"/>
     <property name="build.dir"          value="build"/>
     <property name="classes.dir"        value="${build.dir}/classes"/>
-    <property name="log.dir"            value="log"/>
 
     <property name="server.address"     value="127.0.0.1"/>
     <property name="server.port"        value="9999"/>
-    <property name="server.videofile"   value="${src.dir}/Movie.mjpeg"/>
+    <property name="server.videofile"   value="${src.dir}/movie.mjpeg"/>
 
     <target name="clean">
         <delete dir="${build.dir}"/>
@@ -21,19 +20,15 @@
     <target name="clean-build" depends="clean,build"/>
 
     <target name="client" depends="build">
-        <record name="${log.dir}/client.txt" action="start" append="false"/>
-        <java classpath="${classes.dir}" classname="Client" fork="true">
+        <java classpath="${classes.dir}" classname="Client" fork="true" spawn="true" >
             <arg value="${server.address} ${server.port} ${server.videofile}"/>
         </java>
-        <record name="${log.dir}/client.txt" action="stop"/>
     </target>
 
     <target name="server" depends="build">
-        <record name="${log.dir}/server.txt" action="start" append="false"/>
-        <java classpath="${classes.dir}" classname="Server" fork="true">
+        <java classpath="${classes.dir}" classname="Server" fork="true" spawn="true">
             <arg value="${server.port}"/>
         </java>
-        <record name="${log.dir}/server.txt" action="stop"/>
     </target>
 
 </project>
