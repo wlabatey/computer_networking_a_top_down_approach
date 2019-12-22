@@ -85,10 +85,10 @@ public class Client {
         mainPanel.add(iconLabel);
         mainPanel.add(buttonPanel);
         iconLabel.setBounds(0,0,380,280);
-        buttonPanel.setBounds(0,280,380,50);
+        buttonPanel.setBounds(0,280,430,50);
 
         f.getContentPane().add(mainPanel, BorderLayout.CENTER);
-        f.setSize(new Dimension(390,370));
+        f.setSize(new Dimension(440,362));
         f.setVisible(true);
 
         // Init timer
@@ -106,11 +106,19 @@ public class Client {
     // ------------------------------------
     public static void main(String argv[]) throws Exception {
 
+        if (argv.length < 3) {
+            System.out.println("Usage: java Client [Server hostname] [Server RTSP listening port] [Video file requested]");
+            System.exit(0);
+        }
+
         // Create a Client object
         Client theClient = new Client();
 
         // Get server RTSP port and IP address from the command line
         int RTSP_server_port = Integer.parseInt(argv[1]);
+
+        System.out.println("cli args: " + Arrays.toString(argv));
+
         String ServerHost = argv[0];
         InetAddress ServerIPAddr = InetAddress.getByName(ServerHost);
 
@@ -138,21 +146,16 @@ public class Client {
     class setupButtonListener implements ActionListener {
 
         public void actionPerformed(ActionEvent e) {
-            System.out.println("Setup Button pressed !");
+            System.out.println("Setup Button pressed!");
 
             if (state == INIT) {
                 // Init non-blocking RTPsocket that will be used to receive data
                 try {
-                // -----------------------
-                // Construct a new DatagramSocket to receive RTP packets from the server, on port RTP_RCV_PORT
-                // RTPsocket = ...
-                // -----------------------
+                    // Construct a new DatagramSocket to receive RTP packets from the server, on port RTP_RCV_PORT
+                    RTPsocket = new DatagramSocket(RTP_RCV_PORT);
 
-                // -----------------------
-                // Set TimeOut value of the socket to 5msec.
-                // ....
-                // -----------------------
-                //
+                    // Set TimeOut value of the socket to 5msec.
+                    RTPsocket.setSoTimeout(5);
                 } catch (SocketException se) {
                     System.out.println("Socket exception: " + se);
                     System.exit(0);
@@ -170,10 +173,9 @@ public class Client {
                 }
                 else {
                     // -----------------------
-                    // Change RTSP state and print new state
+                    // TODO: Change RTSP state and print new state
                     // State = ....
-                    //System.out.println("New RTSP state: ....");
-                    // -----------------------
+                    System.out.println("New RTSP state: ....");
                 }
             } // else if state != INIT then do nothing
         }
@@ -186,7 +188,7 @@ public class Client {
 
         public void actionPerformed(ActionEvent e){
 
-            System.out.println("Play Button pressed !");
+            System.out.println("Play Button pressed!");
 
             if (state == READY) {
                 // -----------------------
@@ -222,7 +224,7 @@ public class Client {
 
         public void actionPerformed(ActionEvent e){
 
-            System.out.println("Pause Button pressed !");
+            System.out.println("Pause Button pressed!");
 
             if (state == PLAYING) {
                 // -----------------------
@@ -258,7 +260,7 @@ public class Client {
 
         public void actionPerformed(ActionEvent e){
 
-            System.out.println("Teardown Button pressed !");
+            System.out.println("Teardown Button pressed!");
 
             // -----------------------
             // Increase RTSP sequence number
@@ -380,20 +382,23 @@ public class Client {
 
         try {
             // -----------------------
-            // Use the RTSPBufferedWriter to write to the RTSP socket
+            // TODO: Use the RTSPBufferedWriter to write to the RTSP socket
 
             // Write the request line
-            // RTSPBufferedWriter.write(...);
+            RTSPBufferedWriter.write("SETUP rtsp://127.0.0.1/movie.Mjpeg\r\n");
 
             // Write the CSeq line
+            RTSPBufferedWriter.write("Cseq: " + RTSPSeqNb + "\r\n");
 
             // Check if request_type is equal to "SETUP" and in this case write the Transport: line
             // advertising to the server the port used to receive the RTP packets RTP_RCV_PORT
 
-            // if ....
-            // otherwise, write the Session line from the RTSPid field
-            // else ....
-            // -----------------------
+            if (request_type == "SETUP") {
+                RTSPBufferedWriter.write("Transport: RTP/UDP;client_port=" + RTP_RCV_PORT + "\r\n");
+            }
+            else {
+                RTSPBufferedWriter.write("Session: " + RTSPid + "\r\n");
+            }
 
             RTSPBufferedWriter.flush();
         }

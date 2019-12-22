@@ -286,8 +286,9 @@ public class Server extends JFrame implements ActionListener {
             if (request_type == SETUP) {
                 // Extract RTP_dest_port from LastLine
                 tokens = new StringTokenizer(LastLine);
-                for (int i=0; i<3; i++)
-                tokens.nextToken();  // Skip unused stuff
+                for (int i=0; i<3; i++) {
+                    tokens.nextToken();  // Skip unused stuff
+                }
                 RTP_dest_port = Integer.parseInt(tokens.nextToken());
             }
             // else LastLine will be the SessionId line ... do not check for now.

@@ -1,4 +1,4 @@
-public class RTPpacket{
+public class RTPpacket {
 
     // Size of the RTP header:
     static int HEADER_SIZE = 12;
