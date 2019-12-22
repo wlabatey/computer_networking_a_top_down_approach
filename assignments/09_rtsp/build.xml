@@ -1,0 +1,34 @@
+<project name="RTSPClientServer" basedir="." default="build">
+
+    <property name="src.dir"            value="src"/>
+    <property name="build.dir"          value="build"/>
+    <property name="classes.dir"        value="${build.dir}/classes"/>
+
+    <property name="server.address"     value="127.0.0.1"/>
+    <property name="server.port"        value="9999"/>
+    <property name="server.videofile"   value="${src.dir}/movie.mjpeg"/>
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+
+    <target name="build">
+        <mkdir dir="${classes.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${classes.dir}"/>
+    </target>
+
+    <target name="clean-build" depends="clean,build"/>
+
+    <target name="client" depends="build">
+        <java classpath="${classes.dir}" classname="Client" fork="true" spawn="true" >
+            <arg value="${server.address} ${server.port} ${server.videofile}"/>
+        </java>
+    </target>
+
+    <target name="server" depends="build">
+        <java classpath="${classes.dir}" classname="Server" fork="true" spawn="true">
+            <arg value="${server.port}"/>
+        </java>
+    </target>
+
+</project>

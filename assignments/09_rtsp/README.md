@@ -20,19 +20,19 @@ displaying the transmitted video. You do not need to touch this code.
 
 There are 4 classes in the assignment.
 
-[Client](Client.md):
+[Client](src/Client.java):
     This class implements the client and the user interface which you
     use to send RTSP commands and which is used to display the video.
     Below is what the interface looks like. *You will need to implement
     the actions that are taken when the buttons are pressed*.
 
-[Server](Server.md):
+[Server](src/Server.java):
     This class implements the server which responds to the RTSP requests
     and streams back the video. The RTSP interaction is already
     implemented and the server calls routines in the RTPpacket class to
     packetize the video data. You do not need to modify this class.
 
-[RTPpacket](RTPpacket.md):
+[RTPpacket](src/RTPpacket.java):
     This class is used to handle the RTP packets. It has separate
     routines for handling the received packets at the client side which
     is given and you do not need to modify it (but see [Optional Exercises](#optional-exercises)).
@@ -40,7 +40,7 @@ There are 4 classes in the assignment.
     implement RTP-packetization of the video data*. The second constructor is
     used by the client to de-packetize the data. You do not need to modify that.
 
-[VideoStream](VideoStream.md):
+[VideoStream](src/VideoStream.java):
     This class is used to read video data from the file on disk. You do
     not need to modify this class.
 
@@ -81,7 +81,7 @@ normal RTSP interaction goes as follows.
 4.  Client sends TEARDOWN. This terminates the session and closes the
     connection.
 
-The server alway replies to all the messages the client sends. The reply
+The server always replies to all the messages the client sends. The reply
 codes are roughly the same as in HTTP. The code 200 means that the
 request was successful. In this lab you do not need to implement any
 other reply codes. For more information about RTSP, please see RFC 2326.
