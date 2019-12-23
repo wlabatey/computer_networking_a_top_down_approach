@@ -250,7 +250,7 @@ public class Server extends JFrame implements ActionListener {
             String RequestLine = RTSPBufferedReader.readLine();
 
             System.out.println("RTSP Server - Received from Client:");
-            System.out.println(RequestLine);
+            System.out.println("  " + RequestLine);
 
             StringTokenizer tokens = new StringTokenizer(RequestLine);
             String request_type_string = tokens.nextToken();
@@ -276,14 +276,14 @@ public class Server extends JFrame implements ActionListener {
 
             // Parse the SeqNumLine and extract CSeq field
             String SeqNumLine = RTSPBufferedReader.readLine();
-            System.out.println(SeqNumLine);
+            System.out.println("  " + SeqNumLine);
             tokens = new StringTokenizer(SeqNumLine);
             tokens.nextToken();
             RTSPSeqNb = Integer.parseInt(tokens.nextToken());
 
             // Get LastLine
             String LastLine = RTSPBufferedReader.readLine();
-            System.out.println(LastLine);
+            System.out.println("  " + LastLine);
 
             if (request_type == SETUP) {
                 // Extract RTP_dest_port from LastLine
@@ -308,7 +308,6 @@ public class Server extends JFrame implements ActionListener {
     // Send RTSP Response
     // ------------------------------------
     private void send_RTSP_response() {
-
         try {
             RTSPBufferedWriter.write("RTSP/1.0 200 OK" + CRLF);
             RTSPBufferedWriter.write("CSeq: " + RTSPSeqNb + CRLF);

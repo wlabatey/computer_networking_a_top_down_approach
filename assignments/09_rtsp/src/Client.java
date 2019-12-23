@@ -141,7 +141,7 @@ public class Client {
     // ------------------------------------
 
     // -----------------------
-    // TODO: Handler for Setup button
+    // Handler for Setup button
     // -----------------------
     class setupButtonListener implements ActionListener {
 
@@ -173,16 +173,15 @@ public class Client {
                 }
                 else {
                     // -----------------------
-                    // TODO: Change RTSP state and print new state
-                    //State = ....
-                    //System.out.println("New RTSP state: ....");
+                    state = READY;
+                    System.out.println("New RTSP state: READY");
                 }
             } // else if state != INIT then do nothing
         }
     }
 
     // -----------------------
-    // TODO: Handler for Play button
+    // Handler for Play button
     // -----------------------
     class playButtonListener implements ActionListener {
 
@@ -191,10 +190,8 @@ public class Client {
             System.out.println("Play Button pressed!");
 
             if (state == READY) {
-                // -----------------------
                 // Increase RTSP sequence number
-                // .....
-                // -----------------------
+                RTSPSeqNb++;
 
                 // Send PLAY message to the server
                 send_RTSP_request("PLAY");
@@ -204,11 +201,9 @@ public class Client {
                     System.out.println("Invalid Server Response");
                 }
                 else {
-                    // -----------------------
                     // Change RTSP state and print out new state
-                    //.....
-                    //System.out.println("New RTSP state: ...")
-                    // -----------------------
+                    state = PLAYING;
+                    System.out.println("New RTSP state: PLAYING");
 
                     // Start the timer
                     timer.start();
@@ -218,7 +213,7 @@ public class Client {
     }
 
     // -----------------------
-    // TODO: Handler for Pause button
+    // Handler for Pause button
     // -----------------------
     class pauseButtonListener implements ActionListener {
 
@@ -227,10 +222,8 @@ public class Client {
             System.out.println("Pause Button pressed!");
 
             if (state == PLAYING) {
-                // -----------------------
                 // Increase RTSP sequence number
-                // ........
-                // -----------------------
+                RTSPSeqNb++;
 
                 //Send PAUSE message to the server
                 send_RTSP_request("PAUSE");
@@ -240,11 +233,9 @@ public class Client {
                     System.out.println("Invalid Server Response");
                 }
                 else {
-                    // -----------------------
                     // Change RTSP state and print out new state
-                    // ........
-                    //System.out.println("New RTSP state: ...");
-                    // -----------------------
+                    state = READY;
+                    System.out.println("New RTSP state: READY");
 
                     //stop the timer
                     timer.stop();
@@ -254,7 +245,7 @@ public class Client {
     }
 
     // -----------------------
-    // TODO: Handler for Teardown button
+    // Handler for Teardown button
     // -----------------------
     class tearButtonListener implements ActionListener {
 
@@ -262,10 +253,8 @@ public class Client {
 
             System.out.println("Teardown Button pressed!");
 
-            // -----------------------
             // Increase RTSP sequence number
-            // ..........
-            // -----------------------
+            RTSPSeqNb++;
 
             //Send TEARDOWN message to the server
             send_RTSP_request("TEARDOWN");
@@ -275,12 +264,10 @@ public class Client {
                 System.out.println("Invalid Server Response");
             }
             else {
-                // -----------------------
                 // Change RTSP state and print out new state
-                // ........
-                // -----------------------
+                state = INIT;
 
-                System.out.println("New RTSP state: ...");
+                System.out.println("New RTSP state: INIT");
 
                 // Stop the timer
                 timer.stop();
@@ -347,7 +334,7 @@ public class Client {
             // Parse status line and extract the reply_code:
             String StatusLine = RTSPBufferedReader.readLine();
             System.out.println("RTSP Client - Received from Server:");
-            System.out.println(StatusLine);
+            System.out.println("  " + StatusLine);
 
             StringTokenizer tokens = new StringTokenizer(StatusLine);
             tokens.nextToken(); //skip over the RTSP version
@@ -356,10 +343,10 @@ public class Client {
             // If reply code is OK get and print the 2 other lines
             if (reply_code == 200) {
                 String SeqNumLine = RTSPBufferedReader.readLine();
-                System.out.println(SeqNumLine);
+                System.out.println("  " + SeqNumLine);
 
                 String SessionLine = RTSPBufferedReader.readLine();
-                System.out.println(SessionLine);
+                System.out.println("  " + SessionLine);
 
                 // If state == INIT gets the Session Id from the SessionLine
                 tokens = new StringTokenizer(SessionLine);
@@ -376,16 +363,13 @@ public class Client {
     }
 
     // ------------------------------------
-    // TODO: Send RTSP Request
+    // Send RTSP Request
     // ------------------------------------
     private void send_RTSP_request(String request_type) {
 
         try {
-            // -----------------------
-            // TODO: Use the RTSPBufferedWriter to write to the RTSP socket
-
             // Write the request line
-            RTSPBufferedWriter.write("SETUP rtsp://127.0.0.1/movie.mjpeg\r\n");
+            RTSPBufferedWriter.write(request_type + " movie.mjpeg RTSP/1.0\r\n");
 
             // Write the CSeq line
             RTSPBufferedWriter.write("Cseq: " + RTSPSeqNb + "\r\n");
