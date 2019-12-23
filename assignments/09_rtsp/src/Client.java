@@ -174,8 +174,8 @@ public class Client {
                 else {
                     // -----------------------
                     // TODO: Change RTSP state and print new state
-                    // State = ....
-                    System.out.println("New RTSP state: ....");
+                    //State = ....
+                    //System.out.println("New RTSP state: ....");
                 }
             } // else if state != INIT then do nothing
         }
@@ -385,7 +385,7 @@ public class Client {
             // TODO: Use the RTSPBufferedWriter to write to the RTSP socket
 
             // Write the request line
-            RTSPBufferedWriter.write("SETUP rtsp://127.0.0.1/movie.Mjpeg\r\n");
+            RTSPBufferedWriter.write("SETUP rtsp://127.0.0.1/movie.mjpeg\r\n");
 
             // Write the CSeq line
             RTSPBufferedWriter.write("Cseq: " + RTSPSeqNb + "\r\n");
@@ -394,7 +394,7 @@ public class Client {
             // advertising to the server the port used to receive the RTP packets RTP_RCV_PORT
 
             if (request_type == "SETUP") {
-                RTSPBufferedWriter.write("Transport: RTP/UDP;client_port=" + RTP_RCV_PORT + "\r\n");
+                RTSPBufferedWriter.write("Transport: RTP/UDP;unicast;client_port=" + RTP_RCV_PORT + "\r\n");
             }
             else {
                 RTSPBufferedWriter.write("Session: " + RTSPid + "\r\n");

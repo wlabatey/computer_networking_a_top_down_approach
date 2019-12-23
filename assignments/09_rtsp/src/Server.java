@@ -7,6 +7,8 @@ import java.io.*;
 import java.net.*;
 import java.awt.*;
 import java.util.*;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.Timer;
@@ -285,11 +287,12 @@ public class Server extends JFrame implements ActionListener {
 
             if (request_type == SETUP) {
                 // Extract RTP_dest_port from LastLine
-                tokens = new StringTokenizer(LastLine);
-                for (int i=0; i<3; i++) {
-                    tokens.nextToken();  // Skip unused stuff
-                }
-                RTP_dest_port = Integer.parseInt(tokens.nextToken());
+                String regexString = "[0-9]+$";
+                Pattern regexPattern = Pattern.compile(regexString);
+                Matcher matcher = regexPattern.matcher(LastLine);
+
+                matcher.find();
+                RTP_dest_port = Integer.parseInt(matcher.group());
             }
             // else LastLine will be the SessionId line ... do not check for now.
         }
