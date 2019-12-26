@@ -2,7 +2,6 @@
 
     <property name="src.dir"            value="src"/>
     <property name="build.dir"          value="build"/>
-    <property name="classes.dir"        value="${build.dir}/classes"/>
 
     <property name="server.address"     value="127.0.0.1"/>
     <property name="server.port"        value="9999"/>
@@ -13,20 +12,20 @@
     </target>
 
     <target name="build">
-        <mkdir dir="${classes.dir}"/>
-        <javac srcdir="${src.dir}" destdir="${classes.dir}"/>
+        <mkdir dir="${src.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${src.dir}"/>
     </target>
 
     <target name="clean-build" depends="clean,build"/>
 
     <target name="client" depends="build">
-        <java classpath="${classes.dir}" classname="Client" fork="true" spawn="true" >
+        <java classpath="${src.dir}" classname="Client" fork="true" spawn="true" >
             <arg value="${server.address} ${server.port} ${server.videofile}"/>
         </java>
     </target>
 
     <target name="server" depends="build">
-        <java classpath="${classes.dir}" classname="Server" fork="true" spawn="true">
+        <java classpath="${src.dir}" classname="Server" fork="true" spawn="true">
             <arg value="${server.port}"/>
         </java>
     </target>
