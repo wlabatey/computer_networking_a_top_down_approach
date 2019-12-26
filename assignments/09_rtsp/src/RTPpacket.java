@@ -24,7 +24,7 @@ public class RTPpacket {
     public byte[] payload;
 
     // --------------------------
-    // TODO: Constructor of an RTPpacket object from header fields and payload bitstream
+    // Constructor of an RTPpacket object from header fields and payload bitstream
     // --------------------------
     public RTPpacket(int PType, int Framenb, int Time, byte[] data, int data_length) {
 
@@ -41,24 +41,55 @@ public class RTPpacket {
         TimeStamp = Time;
         PayloadType = PType;
 
-        // Build the header bistream:
-        // --------------------------
+        // Build the header bistream
+        // Fill the header array of byte with RTP header fields.
+        // Manipulate individual bits as per docs to get correct header format.
         header = new byte[HEADER_SIZE];
 
-        // --------------------------
-        // Fill the header array of byte with RTP header fields
-        // header[0] = ...
-        // .....
-        // --------------------------
+        // RTP Fixed Header Fields
+        // https://tools.ietf.org/html/rfc3550#page-13
+
+        // 0                   1                   2                   3
+        // 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+        // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        // |V=2|P|X|  CC   |M|     PT      |       sequence number         |
+        // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        // |                           timestamp                           |
+        // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        // |           synchronization source (SSRC) identifier            |
+        // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
+        // |            contributing source (CSRC) identifiers             |
+        // |                             ....                              |
+        // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+        // First 8 bits contain Version, Padding, Extension & CC
+        header[0] = (byte) 0b10000000; // Version, Padding, Extension, CC
+
+        // Next 8 bits contain Marker (0) and Payload Type (MJPEG_TYPE = 26)
+        header[1] = (byte) PayloadType;
+
+        // Store 16 bit SequenceNumber in 2 bytes of the header
+        header[2] = (byte) (SequenceNumber >>> 8);
+        header[3] = (byte) (SequenceNumber & 0xFF);
+
+        // Store 32 bit TimeStamp in 4 bytes of the header
+        header[4] = (byte) (TimeStamp >>> 24);
+        header[5] = (byte) ((TimeStamp & 0xFF) >>> 16);
+        header[6] = (byte) ((TimeStamp & 0xFFFF) >>> 8);
+        header[7] = (byte) ((TimeStamp & 0xFFFFFF));
+
+        // Store 32 bit SSRC in 4 bytes of the header
+        header[8] = (byte) 0b00000000;
+        header[9] = (byte) 0b00000000;
+        header[10] = (byte) 0b00000000;
+        header[11] = (byte) 0b00000000;
 
         // Fill the payload bitstream:
         payload_size = data_length;
         payload = new byte[data_length];
 
-        // --------------------------
         // Fill payload array of byte from data (given in parameter of the constructor)
-        // ......
-        // --------------------------
+        payload = data.clone();
     }
 
     // --------------------------
